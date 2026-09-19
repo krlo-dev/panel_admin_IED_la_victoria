@@ -6,7 +6,6 @@ import {
   IconoCarga,
   IconoVigencias,
   IconoCursos,
-  IconoAsignaciones,
   IconoAuditoria,
   IconoFlechaDerecha,
   IconoPerfil
@@ -18,42 +17,42 @@ const ACCESOS = [
     icono: IconoUsuarios,
     titulo: 'Gestion de usuarios',
     descripcion: 'Cree, edite y active o desactive cuentas institucionales.',
-    roles: [ROLES.COORDINADOR]
+    roles: [ROLES.ADMINISTRADOR]
   },
   {
     ruta: '/carga-masiva',
     icono: IconoCarga,
     titulo: 'Carga masiva CSV',
     descripcion: 'Importe usuarios con la plantilla institucional.',
-    roles: [ROLES.COORDINADOR]
+    roles: [ROLES.ADMINISTRADOR]
+  },
+  {
+    ruta: '/cargar-estudiantes',
+    icono: IconoCarga,
+    titulo: 'Cargar estudiantes',
+    descripcion: 'Cree o elija un curso y agregue estudiantes desde la interfaz, sin usar un CSV.',
+    roles: [ROLES.ADMINISTRADOR]
   },
   {
     ruta: '/auditoria',
     icono: IconoAuditoria,
     titulo: 'Auditoria',
     descripcion: 'Consulte el registro de acciones sobre los usuarios.',
-    roles: [ROLES.COORDINADOR]
+    roles: [ROLES.ADMINISTRADOR]
   },
   {
     ruta: '/cursos',
     icono: IconoCursos,
     titulo: 'Cursos',
     descripcion: 'Consulte los cursos de la institucion por vigencia.',
-    roles: [ROLES.DOCENTE]
-  },
-  {
-    ruta: '/asignaciones',
-    icono: IconoAsignaciones,
-    titulo: 'Asignacion de tutores',
-    descripcion: 'Enlace docentes como tutores de un curso.',
-    roles: [ROLES.DOCENTE]
+    roles: [ROLES.DOCENTE, ROLES.ADMINISTRADOR]
   },
   {
     ruta: '/vigencias',
     icono: IconoVigencias,
     titulo: 'Vigencias academicas',
-    descripcion: 'Consulte la vigencia activa y los años anteriores.',
-    roles: [ROLES.DOCENTE]
+    descripcion: 'Cree y active vigencias academicas.',
+    roles: [ROLES.ADMINISTRADOR]
   }
 ];
 

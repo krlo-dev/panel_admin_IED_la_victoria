@@ -7,7 +7,6 @@ import {
   IconoInicio,
   IconoUsuarios,
   IconoCursos,
-  IconoAsignaciones,
   IconoCarga,
   IconoVigencias,
   IconoAuditoria,
@@ -15,13 +14,18 @@ import {
 } from './Iconos.jsx';
 
 const ENLACES = [
-  { ruta: '/', etiqueta: 'Inicio', icono: IconoInicio, roles: [ROLES.ESTUDIANTE, ROLES.DOCENTE, ROLES.COORDINADOR] },
-  { ruta: '/usuarios', etiqueta: 'Usuarios', icono: IconoUsuarios, roles: [ROLES.COORDINADOR] },
-  { ruta: '/cursos', etiqueta: 'Cursos', icono: IconoCursos, roles: [ROLES.DOCENTE] },
-  { ruta: '/asignaciones', etiqueta: 'Asignaciones', icono: IconoAsignaciones, roles: [ROLES.DOCENTE] },
-  { ruta: '/carga-masiva', etiqueta: 'Carga masiva', icono: IconoCarga, roles: [ROLES.COORDINADOR] },
-  { ruta: '/vigencias', etiqueta: 'Vigencias', icono: IconoVigencias, roles: [ROLES.DOCENTE] },
-  { ruta: '/auditoria', etiqueta: 'Auditoria', icono: IconoAuditoria, roles: [ROLES.COORDINADOR] }
+  {
+    ruta: '/',
+    etiqueta: 'Inicio',
+    icono: IconoInicio,
+    roles: [ROLES.ESTUDIANTE, ROLES.DOCENTE, ROLES.COORDINADOR, ROLES.ADMINISTRADOR]
+  },
+  { ruta: '/usuarios', etiqueta: 'Usuarios', icono: IconoUsuarios, roles: [ROLES.ADMINISTRADOR] },
+  { ruta: '/cursos', etiqueta: 'Cursos', icono: IconoCursos, roles: [ROLES.DOCENTE, ROLES.ADMINISTRADOR] },
+  { ruta: '/carga-masiva', etiqueta: 'Carga masiva', icono: IconoCarga, roles: [ROLES.ADMINISTRADOR] },
+  { ruta: '/cargar-estudiantes', etiqueta: 'Cargar estudiantes', icono: IconoCarga, roles: [ROLES.ADMINISTRADOR] },
+  { ruta: '/vigencias', etiqueta: 'Vigencias', icono: IconoVigencias, roles: [ROLES.ADMINISTRADOR] },
+  { ruta: '/auditoria', etiqueta: 'Auditoria', icono: IconoAuditoria, roles: [ROLES.ADMINISTRADOR] }
 ];
 
 function iniciales(nombre = '', apellido = '') {

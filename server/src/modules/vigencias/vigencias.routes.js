@@ -10,11 +10,20 @@ export const vigenciasRouter = Router();
 
 vigenciasRouter.use(autenticar);
 
-vigenciasRouter.get('/', autorizar(ROLES.DOCENTE), controller.listar);
-vigenciasRouter.post('/', autorizar(ROLES.COORDINADOR), validar({ body: schemas.crearVigencia }), controller.crear);
+// El listado lo sigue usando el selector de vigencias en Cursos/Usuarios
+// (Docente, Coordinador y ahora Administrador). Crear y activar vigencias
+// pasa a ser exclusivo de Administrador; el Coordinador ya no administra
+// vigencias, solo las consulta.
+vigenciasRouter.get('/', autorizar(ROLES.DOCENTE, ROLES.ADMINISTRADOR), controller.listar);
+vigenciasRouter.post(
+  '/',
+  autorizar(ROLES.ADMINISTRADOR),
+  validar({ body: schemas.crearVigencia }),
+  controller.crear
+);
 vigenciasRouter.patch(
   '/:id/activar',
-  autorizar(ROLES.COORDINADOR),
+  autorizar(ROLES.ADMINISTRADOR),
   validar({ params: schemas.idVigencia }),
   controller.activar
 );

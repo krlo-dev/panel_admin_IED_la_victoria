@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { ROLES } from '../shared/roles.js';
 import Aviso from './Aviso.jsx';
 
-const VACIO = { identificacion: '', usuario: '', nombre: '', apellido: '', email: '', rol: ROLES.ESTUDIANTE };
+const VACIO = { identificacion: '', nombre: '', apellido: '', email: '', rol: ROLES.ESTUDIANTE, cursoId: '' };
 
-export default function FormularioUsuario({ modo = 'crear', valoresIniciales, onGuardar, onCancelar }) {
+export default function FormularioUsuario({ modo = 'crear', valoresIniciales, cursos = [], onGuardar, onCancelar }) {
   const [valores, setValores] = useState({ ...VACIO, ...valoresIniciales });
   const [error, setError] = useState(null);
   const [guardando, setGuardando] = useState(false);
@@ -20,12 +20,21 @@ export default function FormularioUsuario({ modo = 'crear', valoresIniciales, on
 
     try {
       if (modo === 'crear') {
-        await onGuardar(valores);
+        const payload = {
+          identificacion: valores.identificacion,
+          nombre: valores.nombre,
+          apellido: valores.apellido,
+          email: valores.email,
+          rol: valores.rol,
+          ...(valores.rol === ROLES.ESTUDIANTE ? { cursoId: valores.cursoId } : {})
+        };
+        await onGuardar(payload);
       } else {
         await onGuardar({ nombre: valores.nombre, apellido: valores.apellido, email: valores.email, rol: valores.rol });
       }
     } catch (fallo) {
-      setError(fallo.message);
+      const detalles = fallo.detalles?.map((item) => item.mensaje).join(' ');
+      setError(detalles || fallo.message);
     } finally {
       setGuardando(false);
     }
@@ -42,20 +51,14 @@ export default function FormularioUsuario({ modo = 'crear', valoresIniciales, on
             onChange={cambiar('identificacion')}
             disabled={modo === 'editar'}
             placeholder="Ej. 1042456789"
+            inputMode="numeric"
+            pattern="\d{6,20}"
+            title="Solo numeros, entre 6 y 20 digitos"
             required
           />
-        </div>
-
-        <div className="campo">
-          <label htmlFor="usuario">Usuario</label>
-          <input
-            id="usuario"
-            value={valores.usuario}
-            onChange={cambiar('usuario')}
-            disabled={modo === 'editar'}
-            placeholder="Ej. docente1"
-            required
-          />
+          {modo === 'crear' && (
+            <span className="celda-identidad__detalle">Solo numeros, sin puntos ni guiones (6 a 20 digitos).</span>
+          )}
         </div>
 
         <div className="campo">
@@ -83,11 +86,29 @@ export default function FormularioUsuario({ modo = 'crear', valoresIniciales, on
             ))}
           </select>
         </div>
+
+        {modo === 'crear' && valores.rol === ROLES.ESTUDIANTE && (
+          <div className="campo">
+            <label htmlFor="cursoId">Curso</label>
+            <select id="cursoId" value={valores.cursoId} onChange={cambiar('cursoId')} required>
+              <option value="">Seleccione un curso...</option>
+              {cursos.map((curso) => (
+                <option key={curso.id} value={curso.id}>
+                  {curso.grado}
+                </option>
+              ))}
+            </select>
+            <span className="celda-identidad__detalle">
+              El estudiante queda matriculado en este curso, en la vigencia que tiene seleccionada.
+            </span>
+          </div>
+        )}
       </div>
 
       {modo === 'crear' && (
         <div className="aviso aviso--info" style={{ marginTop: 'var(--space-2)' }}>
-          La contrasena inicial se asigna de forma automatica: es el numero de identificacion del usuario.
+          El usuario para iniciar sesion se genera solo a partir del correo, y la contrasena inicial es el
+          numero de identificacion. No hace falta escribir ninguno de los dos.
         </div>
       )}
 

@@ -22,7 +22,8 @@ const subida = multer({
 
 export const cargasRouter = Router();
 
-cargasRouter.use(autenticar, autorizar(ROLES.COORDINADOR));
+cargasRouter.use(autenticar, autorizar(ROLES.ADMINISTRADOR));
 
 cargasRouter.get('/plantilla', controller.descargarPlantilla);
+cargasRouter.get('/plantilla-ejemplo', controller.descargarPlantillaEjemplo);
 cargasRouter.post('/usuarios', resolverVigencia, subida.single('archivo'), controller.procesar);

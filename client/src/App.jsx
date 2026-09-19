@@ -6,8 +6,9 @@ import Ingresar from './pages/Ingresar.jsx';
 import Inicio from './pages/Inicio.jsx';
 import Usuarios from './pages/Usuarios.jsx';
 import Cursos from './pages/Cursos.jsx';
-import Asignaciones from './pages/Asignaciones.jsx';
+import DetalleCurso from './pages/DetalleCurso.jsx';
 import CargaMasiva from './pages/CargaMasiva.jsx';
+import CargarEstudiantes from './pages/CargarEstudiantes.jsx';
 import Vigencias from './pages/Vigencias.jsx';
 import Auditoria from './pages/Auditoria.jsx';
 import SinPermisos from './pages/SinPermisos.jsx';
@@ -23,16 +24,17 @@ export default function App() {
           <Route index element={<Inicio />} />
           <Route path="sin-permisos" element={<SinPermisos />} />
 
-          <Route element={<RutaProtegida roles={[ROLES.DOCENTE]} />}>
+          <Route element={<RutaProtegida roles={[ROLES.DOCENTE, ROLES.ADMINISTRADOR]} />}>
             <Route path="cursos" element={<Cursos />} />
-            <Route path="asignaciones" element={<Asignaciones />} />
-            <Route path="vigencias" element={<Vigencias />} />
+            <Route path="cursos/:id" element={<DetalleCurso />} />
           </Route>
 
-          <Route element={<RutaProtegida roles={[ROLES.COORDINADOR]} />}>
+          <Route element={<RutaProtegida roles={[ROLES.ADMINISTRADOR]} />}>
             <Route path="usuarios" element={<Usuarios />} />
             <Route path="carga-masiva" element={<CargaMasiva />} />
+            <Route path="cargar-estudiantes" element={<CargarEstudiantes />} />
             <Route path="auditoria" element={<Auditoria />} />
+            <Route path="vigencias" element={<Vigencias />} />
           </Route>
 
           <Route path="*" element={<NoEncontrado />} />

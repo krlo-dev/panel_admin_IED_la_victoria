@@ -1,13 +1,20 @@
 import { asyncHandler } from '../../shared/asyncHandler.js';
 import { ok } from '../../shared/respuesta.js';
 import { HttpError } from '../../shared/httpError.js';
-import { ENCABEZADO_CSV } from './plantilla.js';
+import { ENCABEZADO_CSV, plantillaEjemploCsv } from './plantilla.js';
 import * as service from './cargas.service.js';
 
 export const descargarPlantilla = asyncHandler(async (_req, res) => {
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', 'attachment; filename="plantilla_carga_masiva.csv"');
   res.send(`﻿${ENCABEZADO_CSV}`);
+});
+
+export const descargarPlantillaEjemplo = asyncHandler(async (req, res) => {
+  const anio = req.query.anio ? Number(req.query.anio) : undefined;
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="plantilla_ejemplo_carga_masiva.csv"');
+  res.send(`﻿${plantillaEjemploCsv(anio)}`);
 });
 
 export const procesar = asyncHandler(async (req, res) => {

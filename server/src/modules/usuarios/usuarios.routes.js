@@ -9,7 +9,7 @@ import * as controller from './usuarios.controller.js';
 
 export const usuariosRouter = Router();
 
-usuariosRouter.use(autenticar, autorizar(ROLES.COORDINADOR));
+usuariosRouter.use(autenticar, autorizar(ROLES.ADMINISTRADOR));
 
 usuariosRouter.get(
   '/',
@@ -19,7 +19,18 @@ usuariosRouter.get(
 );
 
 usuariosRouter.get('/:id', validar({ params: schemas.idUsuario }), controller.obtener);
-usuariosRouter.post('/', validar({ body: schemas.crearUsuario }), controller.crear);
+usuariosRouter.post(
+  '/',
+  validar({ body: schemas.crearUsuario, query: schemas.consultaAnio }),
+  resolverVigencia,
+  controller.crear
+);
+usuariosRouter.post(
+  '/lote',
+  validar({ body: schemas.crearUsuariosLote, query: schemas.consultaAnio }),
+  resolverVigencia,
+  controller.crearLote
+);
 usuariosRouter.patch(
   '/:id',
   validar({ params: schemas.idUsuario, body: schemas.actualizarUsuario }),

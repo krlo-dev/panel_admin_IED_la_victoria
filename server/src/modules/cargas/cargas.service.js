@@ -48,13 +48,13 @@ async function validarContraBase(filas) {
       mensajes.push(`El curso ${fila.idCurso} no existe`);
     }
     if (identificaciones.has(fila.identificacion)) {
-      mensajes.push('La identificación ya está registrada');
+      mensajes.push(`La identificación "${fila.identificacion}" ya está registrada`);
     }
     if (usuarios.has(fila.usuario)) {
-      mensajes.push('El usuario ya está registrado');
+      mensajes.push(`El usuario "${fila.usuario}" ya está registrado`);
     }
     if (correos.has(fila.email)) {
-      mensajes.push('El correo ya está registrado');
+      mensajes.push(`El correo "${fila.email}" ya está registrado`);
     }
 
     if (mensajes.length) {

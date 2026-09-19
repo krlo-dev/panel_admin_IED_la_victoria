@@ -23,7 +23,20 @@ export const obtener = asyncHandler(async (req, res) => {
 });
 
 export const crear = asyncHandler(async (req, res) => {
-  creado(res, await service.crear({ datos: req.body, responsable: req.usuario }));
+  creado(res, await service.crear({ datos: req.body, vigenciaId: req.vigencia.id, responsable: req.usuario }));
+});
+
+export const crearLote = asyncHandler(async (req, res) => {
+  const { cursoId, estudiantes } = req.body;
+  creado(
+    res,
+    await service.crearLote({
+      cursoId,
+      estudiantes,
+      vigenciaId: req.vigencia.id,
+      responsable: req.usuario
+    })
+  );
 });
 
 export const actualizar = asyncHandler(async (req, res) => {

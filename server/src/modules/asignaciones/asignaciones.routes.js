@@ -19,6 +19,8 @@ asignacionesRouter.get(
   controller.listar
 );
 
+asignacionesRouter.get('/docentes', autorizar(ROLES.COORDINADOR), controller.docentes);
+
 asignacionesRouter.post(
   '/',
   autorizar(ROLES.COORDINADOR),

@@ -8,6 +8,6 @@ import * as controller from './auditoria.controller.js';
 
 export const auditoriaRouter = Router();
 
-auditoriaRouter.use(autenticar, autorizar(ROLES.COORDINADOR));
+auditoriaRouter.use(autenticar, autorizar(ROLES.ADMINISTRADOR));
 
 auditoriaRouter.get('/', validar({ query: consultaAuditoria }), controller.listar);

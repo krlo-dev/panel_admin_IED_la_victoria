@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { descargarPlantilla, enviarCargaMasiva } from '../api/cargas.js';
+import { descargarPlantilla, descargarPlantillaEjemplo, enviarCargaMasiva } from '../api/cargas.js';
 import { useAuth } from '../hooks/useAuth.js';
 import Aviso from '../components/Aviso.jsx';
 import { IconoCarga, IconoDocumento, IconoAlerta } from '../components/Iconos.jsx';
@@ -22,6 +22,7 @@ export default function CargaMasiva() {
   const [error, setError] = useState(null);
   const [enviando, setEnviando] = useState(false);
   const [descargando, setDescargando] = useState(false);
+  const [descargandoEjemplo, setDescargandoEjemplo] = useState(false);
 
   const elegirArchivo = (lista) => {
     const elegido = lista?.[0] ?? null;
@@ -62,6 +63,18 @@ export default function CargaMasiva() {
       setError(fallo.message);
     } finally {
       setDescargando(false);
+    }
+  };
+
+  const descargarEjemplo = async () => {
+    setDescargandoEjemplo(true);
+    setError(null);
+    try {
+      await descargarPlantillaEjemplo(vigencia?.id);
+    } catch (fallo) {
+      setError(fallo.message);
+    } finally {
+      setDescargandoEjemplo(false);
     }
   };
 
@@ -143,18 +156,29 @@ export default function CargaMasiva() {
 
           {resumen && (
             <Aviso tipo="exito">
-              {`Archivo aceptado: ${resumen.creados} estudiantes creados en la vigencia ${resumen.anio}.`}
+              {`Archivo aceptado: ${resumen.creados} ${resumen.creados === 1 ? 'estudiante creado' : 'estudiantes creados'} en la vigencia ${resumen.anio}.`}
             </Aviso>
           )}
 
           {errores.length > 0 && (
             <div style={{ marginTop: 'var(--space-4)' }}>
-              <div className="aviso aviso--error" style={{ marginBottom: 'var(--space-3)' }}>
-                <IconoAlerta width={18} height={18} />
-                <span>
-                  Bloqueo de carga activo: se encontraron {errores.length} filas con inconsistencias. No se
-                  admiten cargas parciales, corrija el archivo y vuelva a intentar.
-                </span>
+              <div className="aviso aviso--error" style={{ marginBottom: 'var(--space-3)', flexDirection: 'column', alignItems: 'flex-start', gap: 'var(--space-2)' }}>
+                <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                  <IconoAlerta width={18} height={18} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <span>
+                    Bloqueo de carga activo: se encontraron {errores.length} filas con inconsistencias. No se
+                    admiten cargas parciales, corrija el archivo y vuelva a intentar. Cada fila de abajo indica
+                    exactamente que dato quedo mal escrito.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="boton boton--claro"
+                  onClick={descargarEjemplo}
+                  disabled={descargandoEjemplo}
+                >
+                  {descargandoEjemplo ? 'Descargando...' : 'Descargar plantilla de ejemplo llena'}
+                </button>
               </div>
 
               <div className="tabla-envoltorio">

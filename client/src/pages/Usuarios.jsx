@@ -6,6 +6,7 @@ import {
   listarUsuarios,
   restablecerContrasena
 } from '../api/usuarios.js';
+import { listarCursos } from '../api/cursos.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { ROLES } from '../shared/roles.js';
 import Aviso from '../components/Aviso.jsx';
@@ -19,7 +20,8 @@ const PESTANAS = [
   { valor: '', etiqueta: 'Todos' },
   { valor: ROLES.ESTUDIANTE, etiqueta: 'Estudiantes' },
   { valor: ROLES.DOCENTE, etiqueta: 'Docentes' },
-  { valor: ROLES.COORDINADOR, etiqueta: 'Coordinadores' }
+  { valor: ROLES.COORDINADOR, etiqueta: 'Coordinadores' },
+  { valor: ROLES.ADMINISTRADOR, etiqueta: 'Administradores' }
 ];
 
 function iniciales(nombre = '', apellido = '') {
@@ -27,6 +29,7 @@ function iniciales(nombre = '', apellido = '') {
 }
 
 function claseInsigniaRol(rol) {
+  if (rol === ROLES.ADMINISTRADOR) return 'insignia insignia--administrador';
   if (rol === ROLES.COORDINADOR) return 'insignia insignia--coordinador';
   if (rol === ROLES.DOCENTE) return 'insignia insignia--docente';
   return 'insignia insignia--estudiante';
@@ -48,6 +51,7 @@ export default function Usuarios() {
   const [error, setError] = useState(null);
   const [mensaje, setMensaje] = useState(null);
   const [modal, setModal] = useState(null);
+  const [cursos, setCursos] = useState([]);
 
   const consultar = useCallback(async () => {
     setCargando(true);
@@ -73,16 +77,18 @@ export default function Usuarios() {
 
   const consultarConteos = useCallback(async () => {
     try {
-      const [todos, estudiantes, docentes, coordinadores] = await Promise.all([
+      const [todos, estudiantes, docentes, coordinadores, administradores] = await Promise.all([
         listarUsuarios({ anio: anioMostrado, limite: 1 }),
         listarUsuarios({ rol: ROLES.ESTUDIANTE, anio: anioMostrado, limite: 1 }),
         listarUsuarios({ rol: ROLES.DOCENTE, anio: anioMostrado, limite: 1 }),
-        listarUsuarios({ rol: ROLES.COORDINADOR, anio: anioMostrado, limite: 1 })
+        listarUsuarios({ rol: ROLES.COORDINADOR, anio: anioMostrado, limite: 1 }),
+        listarUsuarios({ rol: ROLES.ADMINISTRADOR, anio: anioMostrado, limite: 1 })
       ]);
       setConteos({
         [ROLES.ESTUDIANTE]: estudiantes.meta?.total ?? 0,
         [ROLES.DOCENTE]: docentes.meta?.total ?? 0,
         [ROLES.COORDINADOR]: coordinadores.meta?.total ?? 0,
+        [ROLES.ADMINISTRADOR]: administradores.meta?.total ?? 0,
         total: todos.meta?.total ?? 0
       });
     } catch {
@@ -97,6 +103,13 @@ export default function Usuarios() {
   useEffect(() => {
     consultarConteos();
   }, [consultarConteos]);
+
+  useEffect(() => {
+    if (!anioMostrado) return;
+    listarCursos({ anio: anioMostrado })
+      .then((respuesta) => setCursos(respuesta.data))
+      .catch(() => setCursos([]));
+  }, [anioMostrado]);
 
   useEffect(() => {
     setPagina(1);
@@ -126,9 +139,9 @@ export default function Usuarios() {
   };
 
   const crear = async (datos) => {
-    await crearUsuario(datos);
+    const respuesta = await crearUsuario(datos, anioMostrado);
     setModal(null);
-    setMensaje(`Usuario ${datos.usuario} creado correctamente`);
+    setMensaje(`Usuario ${respuesta.data.usuario} creado correctamente`);
     await Promise.all([consultar(), consultarConteos()]);
   };
 
@@ -146,8 +159,8 @@ export default function Usuarios() {
         <div>
           <h1>Gestion de usuarios e identidad</h1>
           <p className="seccion__subtitulo">
-            {`Directorio institucional de la vigencia ${anioMostrado ?? ''}. El coordinador siempre aparece, `}
-            {'y los docentes y estudiantes se muestran solo si estan enlazados a un curso en esa vigencia.'}
+            {`Directorio institucional de la vigencia ${anioMostrado ?? ''}. Administradores y coordinadores `}
+            {'siempre aparecen, y los docentes y estudiantes se muestran solo si estan enlazados a un curso en esa vigencia.'}
           </p>
         </div>
         <div className="seccion__acciones">
@@ -178,6 +191,10 @@ export default function Usuarios() {
         <div className="estadistica">
           <div className="estadistica__cabecera">Coordinadores</div>
           <span className="estadistica__valor">{conteos[ROLES.COORDINADOR] ?? '—'}</span>
+        </div>
+        <div className="estadistica">
+          <div className="estadistica__cabecera">Administradores</div>
+          <span className="estadistica__valor">{conteos[ROLES.ADMINISTRADOR] ?? '—'}</span>
         </div>
       </div>
 
@@ -316,7 +333,7 @@ export default function Usuarios() {
 
       {modal?.modo === 'crear' && (
         <Modal titulo="Crear nuevo usuario" subtitulo="El usuario quedara activo de inmediato" onCerrar={() => setModal(null)}>
-          <FormularioUsuario modo="crear" onGuardar={crear} onCancelar={() => setModal(null)} />
+          <FormularioUsuario modo="crear" cursos={cursos} onGuardar={crear} onCancelar={() => setModal(null)} />
         </Modal>
       )}
 

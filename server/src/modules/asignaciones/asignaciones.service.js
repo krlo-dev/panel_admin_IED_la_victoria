@@ -1,11 +1,26 @@
 import { withTransaction } from '../../config/db.js';
 import { HttpError } from '../../shared/httpError.js';
+import { ROLES } from '../../shared/roles.js';
 import { registrar } from '../auditoria/auditoria.service.js';
 import { buscarPorId } from '../cursos/cursos.repository.js';
+import * as usuariosRepository from '../usuarios/usuarios.repository.js';
 import * as repository from './asignaciones.repository.js';
 
 export async function listar(filtros) {
   return repository.listar(filtros);
+}
+
+export async function docentesDisponibles() {
+  // Sin filtro de vigencia a proposito: un docente activo debe poder ser
+  // asignado a su primer curso del año, aunque todavia no este enlazado a
+  // ningun curso en usuario_curso_vigencia para esa vigencia.
+  const { registros } = await usuariosRepository.listar({
+    rol: ROLES.DOCENTE,
+    activo: true,
+    pagina: 1,
+    limite: 100
+  });
+  return registros;
 }
 
 export async function asignar({ cursoId, docenteId, vigenciaId, responsable }) {

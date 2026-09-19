@@ -23,14 +23,47 @@ export async function buscarPorIdentificacion(identificacion) {
   return queryOne(`${SELECCION} WHERE u.identificacion = ? LIMIT 1`, [identificacion]);
 }
 
+export async function buscarPorEmail(email) {
+  return queryOne(`${SELECCION} WHERE u.email = ? LIMIT 1`, [email]);
+}
+
+export async function buscarPorUsuario(usuario) {
+  return queryOne(`${SELECCION} WHERE u.usuario = ? LIMIT 1`, [usuario]);
+}
+
+// Chequeo en bloque para la carga manual de estudiantes: en vez de una
+// consulta por fila, se trae de una sola vez que identificaciones, correos y
+// usuarios (derivados del correo) ya existen, para poder rechazar el lote
+// completo antes de insertar nada si hay algun choque contra la base.
+export async function buscarOcupados({ identificaciones, correos, usuarios }) {
+  if (!identificaciones.length) {
+    return { identificaciones: new Set(), correos: new Set(), usuarios: new Set() };
+  }
+
+  const registros = await query(
+    `SELECT identificacion, email, usuario
+       FROM usuario
+      WHERE identificacion IN (${identificaciones.map(() => '?').join(', ')})
+         OR email IN (${correos.map(() => '?').join(', ')})
+         OR usuario IN (${usuarios.map(() => '?').join(', ')})`,
+    [...identificaciones, ...correos, ...usuarios]
+  );
+
+  return {
+    identificaciones: new Set(registros.map((fila) => fila.identificacion)),
+    correos: new Set(registros.map((fila) => fila.email)),
+    usuarios: new Set(registros.map((fila) => fila.usuario))
+  };
+}
+
 export async function listar({ busqueda, rol, activo, curso, vigenciaId, pagina, limite }) {
   const condiciones = [];
   const parametros = [];
 
   // Docentes y estudiantes solo pertenecen a una vigencia si estan enlazados a un
-  // curso en usuario_curso_vigencia durante esa vigencia. El coordinador es una
-  // cuenta institucional permanente, no depende de ningun enlace curso-vigencia,
-  // asi que se excluye de este filtro y siempre aparece.
+  // curso en usuario_curso_vigencia durante esa vigencia. Administrador y
+  // Coordinador son cuentas institucionales permanentes, no dependen de ningun
+  // enlace curso-vigencia, asi que se excluyen de este filtro y siempre aparecen.
   if (curso && vigenciaId) {
     condiciones.push(
       'EXISTS (SELECT 1 FROM usuario_curso_vigencia ucv WHERE ucv.id_usuario = u.id AND ucv.id_curso = ? AND ucv.id_vigencia = ?)'
@@ -38,9 +71,9 @@ export async function listar({ busqueda, rol, activo, curso, vigenciaId, pagina,
     parametros.push(curso, vigenciaId);
   } else if (vigenciaId) {
     condiciones.push(
-      "(r.nombre = ? OR EXISTS (SELECT 1 FROM usuario_curso_vigencia ucv WHERE ucv.id_usuario = u.id AND ucv.id_vigencia = ?))"
+      "(r.nombre IN (?, ?) OR EXISTS (SELECT 1 FROM usuario_curso_vigencia ucv WHERE ucv.id_usuario = u.id AND ucv.id_vigencia = ?))"
     );
-    parametros.push(ROLES.COORDINADOR, vigenciaId);
+    parametros.push(ROLES.ADMINISTRADOR, ROLES.COORDINADOR, vigenciaId);
   }
 
   if (busqueda) {
@@ -111,6 +144,14 @@ export async function crear(datos, connection) {
   );
 
   return id;
+}
+
+export async function matricular({ cursoId, vigenciaId, usuarioId }, connection) {
+  const ejecutor = connection ?? pool;
+  await ejecutor.execute(
+    'INSERT INTO usuario_curso_vigencia (id_curso, id_vigencia, id_usuario) VALUES (?, ?, ?)',
+    [cursoId, vigenciaId, usuarioId]
+  );
 }
 
 export async function actualizar(id, datos, connection) {

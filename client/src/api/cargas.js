@@ -36,3 +36,27 @@ export async function descargarPlantilla() {
 
   descargarBlob(await respuesta.blob(), 'plantilla_carga_masiva.csv');
 }
+
+export async function descargarPlantillaEjemplo(anio) {
+  if (MODO_DEMO) {
+    const { generarPlantillaEjemploCsv } = await import('./mocks/servidor.js');
+    descargarBlob(generarPlantillaEjemploCsv(anio), 'plantilla_ejemplo_carga_masiva.csv');
+    return;
+  }
+
+  const token = obtenerToken();
+  const url = new URL(`${BASE}/cargas/plantilla-ejemplo`);
+  if (anio) {
+    url.searchParams.set('anio', String(anio));
+  }
+
+  const respuesta = await fetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {}
+  });
+
+  if (!respuesta.ok) {
+    throw new Error('No fue posible descargar la plantilla de ejemplo');
+  }
+
+  descargarBlob(await respuesta.blob(), 'plantilla_ejemplo_carga_masiva.csv');
+}

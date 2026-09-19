@@ -515,3 +515,17 @@ export async function manejarSolicitud({ metodo, ruta, query = {}, cuerpo, formu
 export function generarPlantillaCsv() {
   return new Blob([`﻿${ENCABEZADO_CSV}`], { type: 'text/csv;charset=utf-8' });
 }
+
+export function generarPlantillaEjemploCsv(anio) {
+  const anioMostrado = anio ?? new Date().getFullYear();
+  const filaEjemplo = [
+    anioMostrado,
+    111,
+    'juan.perez',
+    1000000001,
+    'Perez Gomez',
+    'Juan Camilo',
+    'juan.perez@iedlavictoria.edu.co'
+  ].join(',');
+  return new Blob([`﻿${ENCABEZADO_CSV}${filaEjemplo}\n`], { type: 'text/csv;charset=utf-8' });
+}

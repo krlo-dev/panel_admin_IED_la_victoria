@@ -26,9 +26,19 @@ export function crearApp() {
     '/api',
     rateLimit({
       windowMs: 60 * 1000,
-      limit: 120,
+      // La SPA dispara varias peticiones en paralelo por cada cambio de pantalla
+      // o de vigencia (listados, conteos, selector de vigencias, etc.), asi que
+      // el limite por minuto tiene que ser generoso para uso normal, no solo
+      // para trafico automatizado.
+      limit: 600,
       standardHeaders: true,
-      legacyHeaders: false
+      legacyHeaders: false,
+      message: {
+        error: {
+          codigo: 'DEMASIADAS_SOLICITUDES',
+          mensaje: 'Demasiadas solicitudes en poco tiempo. Espere un momento y vuelva a intentar.'
+        }
+      }
     })
   );
 

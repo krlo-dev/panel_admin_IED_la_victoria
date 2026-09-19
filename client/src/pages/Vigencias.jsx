@@ -86,7 +86,7 @@ export default function Vigencias() {
       <Aviso tipo="error">{error}</Aviso>
       <Aviso tipo="exito">{mensaje}</Aviso>
 
-      <PermisoRol roles={[ROLES.COORDINADOR]}>
+      <PermisoRol roles={[ROLES.ADMINISTRADOR]}>
         <form
           className="tarjeta tarjeta--sombra"
           onSubmit={crear}
@@ -166,7 +166,7 @@ export default function Vigencias() {
                       <span className="insignia insignia--inactivo">Historica</span>
                     </div>
                     <p className="celda-identidad__detalle">{`${vigencia.fechaInicio} a ${vigencia.fechaFin}`}</p>
-                    <PermisoRol roles={[ROLES.COORDINADOR]}>
+                    <PermisoRol roles={[ROLES.ADMINISTRADOR]}>
                       <button type="button" className="boton boton--claro boton--sm" onClick={() => activar(vigencia.id)}>
                         Activar esta vigencia
                       </button>

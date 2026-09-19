@@ -8,6 +8,10 @@ export const listar = asyncHandler(async (req, res) => {
   ok(res, registros, { anio: req.vigencia.anio, total: registros.length });
 });
 
+export const docentes = asyncHandler(async (req, res) => {
+  ok(res, await service.docentesDisponibles());
+});
+
 export const asignar = asyncHandler(async (req, res) => {
   const asignacion = await service.asignar({
     cursoId: req.body.cursoId,

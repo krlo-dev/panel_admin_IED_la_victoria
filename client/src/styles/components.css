@@ -135,6 +135,11 @@
   white-space: nowrap;
 }
 
+.insignia--administrador {
+  background: var(--color-texto);
+  color: #ffffff;
+}
+
 .insignia--coordinador {
   background: var(--color-marino);
   color: #ffffff;
@@ -179,6 +184,18 @@
 .tarjeta--sombra {
   border-color: transparent;
   box-shadow: var(--sombra-md);
+}
+
+.tarjeta--clic {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.1s ease;
+}
+
+.tarjeta--clic:hover {
+  border-color: var(--color-primario);
+  transform: translateY(-2px);
 }
 
 .rejilla-estadisticas {
@@ -382,6 +399,7 @@
   flex-direction: column;
   gap: 0.35rem;
   margin-bottom: var(--space-4);
+  min-width: 0;
 }
 
 .campo:last-child {
@@ -397,6 +415,7 @@ label {
 input,
 select,
 textarea {
+  min-width: 0;
   padding: 0.6rem 0.75rem;
   border: 1px solid var(--color-borde);
   border-radius: var(--radio-sm);
@@ -680,11 +699,13 @@ input::placeholder {
 
 .modal {
   width: 100%;
+  min-width: 0;
   background: var(--color-superficie);
   border-radius: var(--radio-lg);
   box-shadow: var(--sombra-lg);
   max-height: calc(100vh - 2 * var(--space-4));
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .modal__cabecera {
@@ -715,7 +736,7 @@ input::placeholder {
 
 .rejilla-campos {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 0 var(--space-4);
 }
 
