@@ -3,20 +3,25 @@ import { listarCursos } from '../api/cursos.js';
 import { useAuth } from '../hooks/useAuth.js';
 import Aviso from '../components/Aviso.jsx';
 import Cargando from '../components/Cargando.jsx';
+import SelectorVigencia from '../components/SelectorVigencia.jsx';
 import { IconoBuscar, IconoCursos } from '../components/Iconos.jsx';
 
 export default function Cursos() {
   const { vigencia } = useAuth();
   const [registros, setRegistros] = useState([]);
   const [busqueda, setBusqueda] = useState('');
+  const [anioConsultado, setAnioConsultado] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
+
+  const anioMostrado = anioConsultado ?? vigencia?.id;
+  const esVigenciaActiva = anioMostrado === vigencia?.id;
 
   useEffect(() => {
     let vigente = true;
     setCargando(true);
 
-    listarCursos({ anio: vigencia?.id })
+    listarCursos({ anio: anioMostrado })
       .then((respuesta) => vigente && setRegistros(respuesta.data))
       .catch((fallo) => vigente && setError(fallo.message))
       .finally(() => vigente && setCargando(false));
@@ -24,7 +29,7 @@ export default function Cursos() {
     return () => {
       vigente = false;
     };
-  }, [vigencia?.id]);
+  }, [anioMostrado]);
 
   const visibles = useMemo(() => {
     const patron = busqueda.trim().toLowerCase();
@@ -43,7 +48,10 @@ export default function Cursos() {
         <div>
           <h1>Cursos institucionales</h1>
           <p className="seccion__subtitulo">
-            {vigencia ? `Vigencia academica ${vigencia.id}` : 'Consulta de cursos por vigencia'}
+            {anioMostrado
+              ? `Cursos habilitados durante la vigencia ${anioMostrado}, con la cantidad de estudiantes y docentes enlazados a cada uno.`
+              : 'Consulte los cursos de la institucion agrupados por vigencia academica.'}
+            {!esVigenciaActiva && ' Esta viendo un año anterior, en modo solo consulta.'}
           </p>
         </div>
       </div>
@@ -58,6 +66,7 @@ export default function Cursos() {
             onChange={(evento) => setBusqueda(evento.target.value)}
           />
         </div>
+        <SelectorVigencia valor={anioMostrado} alCambiar={setAnioConsultado} />
       </div>
 
       <Aviso tipo="error">{error}</Aviso>

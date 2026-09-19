@@ -11,10 +11,10 @@ export const vigenciasRouter = Router();
 vigenciasRouter.use(autenticar);
 
 vigenciasRouter.get('/', autorizar(ROLES.DOCENTE), controller.listar);
-vigenciasRouter.post('/', autorizar(ROLES.ADMINISTRADOR), validar({ body: schemas.crearVigencia }), controller.crear);
+vigenciasRouter.post('/', autorizar(ROLES.COORDINADOR), validar({ body: schemas.crearVigencia }), controller.crear);
 vigenciasRouter.patch(
   '/:id/activar',
-  autorizar(ROLES.ADMINISTRADOR),
+  autorizar(ROLES.COORDINADOR),
   validar({ params: schemas.idVigencia }),
   controller.activar
 );

@@ -62,9 +62,12 @@ function formatearFecha(valor) {
     return null;
   }
   try {
-    return new Intl.DateTimeFormat('es-CO', { day: '2-digit', month: 'long', year: 'numeric' }).format(
-      new Date(valor)
-    );
+    return new Intl.DateTimeFormat('es-CO', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'UTC'
+    }).format(new Date(valor));
   } catch {
     return null;
   }
@@ -84,9 +87,9 @@ export default function Inicio() {
         <div>
           <h1>{`Bienvenido, ${usuario?.nombre ?? ''}`}</h1>
           <p className="seccion__subtitulo">
-            {usuario?.rol}
-            {vigencia ? ` · Vigencia academica ${vigencia.id} activa` : ''}
-            {inicioVigencia && finVigencia ? ` (${inicioVigencia} a ${finVigencia})` : ''}
+            {`Sesion iniciada como ${usuario?.rol ?? ''}`}
+            {vigencia ? `, vigencia academica ${vigencia.id} activa` : ''}
+            {inicioVigencia && finVigencia ? ` desde el ${inicioVigencia} hasta el ${finVigencia}` : ''}
           </p>
         </div>
       </div>

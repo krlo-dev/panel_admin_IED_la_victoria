@@ -6,11 +6,13 @@ import {
   listarUsuarios,
   restablecerContrasena
 } from '../api/usuarios.js';
+import { useAuth } from '../hooks/useAuth.js';
 import { ROLES } from '../shared/roles.js';
 import Aviso from '../components/Aviso.jsx';
 import Cargando from '../components/Cargando.jsx';
 import Modal from '../components/Modal.jsx';
 import FormularioUsuario from '../components/FormularioUsuario.jsx';
+import SelectorVigencia from '../components/SelectorVigencia.jsx';
 import { IconoBuscar, IconoUsuarios } from '../components/Iconos.jsx';
 
 const PESTANAS = [
@@ -31,6 +33,10 @@ function claseInsigniaRol(rol) {
 }
 
 export default function Usuarios() {
+  const { vigencia } = useAuth();
+  const [anioConsultado, setAnioConsultado] = useState(null);
+  const anioMostrado = anioConsultado ?? vigencia?.id;
+
   const [registros, setRegistros] = useState([]);
   const [conteos, setConteos] = useState({});
   const [busqueda, setBusqueda] = useState('');
@@ -52,6 +58,7 @@ export default function Usuarios() {
         busqueda: busqueda || undefined,
         rol: rol || undefined,
         activo: estado || undefined,
+        anio: anioMostrado,
         pagina,
         limite: 10
       });
@@ -62,15 +69,15 @@ export default function Usuarios() {
     } finally {
       setCargando(false);
     }
-  }, [busqueda, rol, estado, pagina]);
+  }, [busqueda, rol, estado, anioMostrado, pagina]);
 
   const consultarConteos = useCallback(async () => {
     try {
       const [todos, estudiantes, docentes, coordinadores] = await Promise.all([
-        listarUsuarios({ limite: 1 }),
-        listarUsuarios({ rol: ROLES.ESTUDIANTE, limite: 1 }),
-        listarUsuarios({ rol: ROLES.DOCENTE, limite: 1 }),
-        listarUsuarios({ rol: ROLES.COORDINADOR, limite: 1 })
+        listarUsuarios({ anio: anioMostrado, limite: 1 }),
+        listarUsuarios({ rol: ROLES.ESTUDIANTE, anio: anioMostrado, limite: 1 }),
+        listarUsuarios({ rol: ROLES.DOCENTE, anio: anioMostrado, limite: 1 }),
+        listarUsuarios({ rol: ROLES.COORDINADOR, anio: anioMostrado, limite: 1 })
       ]);
       setConteos({
         [ROLES.ESTUDIANTE]: estudiantes.meta?.total ?? 0,
@@ -81,7 +88,7 @@ export default function Usuarios() {
     } catch {
       setConteos({});
     }
-  }, []);
+  }, [anioMostrado]);
 
   useEffect(() => {
     consultar();
@@ -93,7 +100,7 @@ export default function Usuarios() {
 
   useEffect(() => {
     setPagina(1);
-  }, [busqueda, rol, estado]);
+  }, [busqueda, rol, estado, anioMostrado]);
 
   const totalPaginas = useMemo(() => Math.max(1, Math.ceil((meta.total ?? 0) / (meta.limite ?? 10))), [meta]);
 
@@ -138,7 +145,10 @@ export default function Usuarios() {
       <div className="seccion__encabezado">
         <div>
           <h1>Gestion de usuarios e identidad</h1>
-          <p className="seccion__subtitulo">Directorio unificado de administracion y control de acceso institucional</p>
+          <p className="seccion__subtitulo">
+            {`Directorio institucional de la vigencia ${anioMostrado ?? ''}. El coordinador siempre aparece, `}
+            {'y los docentes y estudiantes se muestran solo si estan enlazados a un curso en esa vigencia.'}
+          </p>
         </div>
         <div className="seccion__acciones">
           <button type="button" className="boton" onClick={() => setModal({ modo: 'crear' })}>
@@ -200,6 +210,7 @@ export default function Usuarios() {
           <option value="true">Activo</option>
           <option value="false">Bloqueado</option>
         </select>
+        <SelectorVigencia valor={anioMostrado} alCambiar={setAnioConsultado} />
       </div>
 
       <Aviso tipo="error">{error}</Aviso>

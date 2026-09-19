@@ -6,11 +6,16 @@ import { useAuth } from '../hooks/useAuth.js';
 import { ROLES } from '../shared/roles.js';
 import Aviso from '../components/Aviso.jsx';
 import Cargando from '../components/Cargando.jsx';
+import SelectorVigencia from '../components/SelectorVigencia.jsx';
 import { IconoAsignaciones } from '../components/Iconos.jsx';
 
 export default function Asignaciones() {
   const { vigencia, rolesEfectivos } = useAuth();
-  const puedeAsignar = rolesEfectivos.includes(ROLES.COORDINADOR);
+  const [anioConsultado, setAnioConsultado] = useState(null);
+
+  const anioMostrado = anioConsultado ?? vigencia?.id;
+  const esVigenciaActiva = anioMostrado === vigencia?.id;
+  const puedeAsignar = rolesEfectivos.includes(ROLES.COORDINADOR) && esVigenciaActiva;
 
   const [asignaciones, setAsignaciones] = useState([]);
   const [cursos, setCursos] = useState([]);
@@ -26,14 +31,13 @@ export default function Asignaciones() {
     setError(null);
 
     try {
-      const anio = vigencia?.id;
-      const respuesta = await listarAsignaciones({ anio });
+      const respuesta = await listarAsignaciones({ anio: anioMostrado });
       setAsignaciones(respuesta.data);
 
       if (puedeAsignar) {
         const [listadoCursos, listadoDocentes] = await Promise.all([
-          listarCursos({ anio }),
-          listarUsuarios({ rol: ROLES.DOCENTE, activo: 'true', limite: 100, anio })
+          listarCursos({ anio: anioMostrado }),
+          listarUsuarios({ rol: ROLES.DOCENTE, activo: 'true', limite: 100, anio: anioMostrado })
         ]);
         setCursos(listadoCursos.data);
         setDocentes(listadoDocentes.data);
@@ -43,7 +47,7 @@ export default function Asignaciones() {
     } finally {
       setCargando(false);
     }
-  }, [puedeAsignar, vigencia?.id]);
+  }, [puedeAsignar, anioMostrado]);
 
   useEffect(() => {
     consultar();
@@ -88,8 +92,15 @@ export default function Asignaciones() {
       <div className="seccion__encabezado">
         <div>
           <h1>Asignacion de tutores</h1>
-          <p className="seccion__subtitulo">Enlace de docentes como tutores de curso por vigencia academica</p>
+          <p className="seccion__subtitulo">
+            {`Enlace de docentes como tutores de curso durante la vigencia ${anioMostrado ?? ''}.`}
+            {!esVigenciaActiva && ' Esta viendo un año anterior: solo puede consultarlo, no modificarlo.'}
+          </p>
         </div>
+      </div>
+
+      <div className="barra-filtros">
+        <SelectorVigencia valor={anioMostrado} alCambiar={setAnioConsultado} />
       </div>
 
       <Aviso tipo="error">{error}</Aviso>

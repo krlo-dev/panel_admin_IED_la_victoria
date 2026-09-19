@@ -72,8 +72,8 @@ export default function CargaMasiva() {
         <div>
           <h1>Carga masiva de usuarios por CSV</h1>
           <p className="seccion__subtitulo">
-            Importacion de estudiantes mediante archivo estructurado. La carga es todo o nada: si una fila
-            tiene errores, el archivo se rechaza completo (RN07).
+            Importe estudiantes con la plantilla institucional. Si alguna fila del archivo tiene errores,
+            no se procesa ninguna, para que la base nunca quede con datos a medias.
           </p>
         </div>
         <div className="seccion__acciones">

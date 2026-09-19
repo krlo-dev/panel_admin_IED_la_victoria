@@ -43,7 +43,9 @@ export default function Auditoria() {
       <div className="seccion__encabezado">
         <div>
           <h1>Registro de auditoria</h1>
-          <p className="seccion__subtitulo">Acciones realizadas sobre los usuarios: responsable, accion y fecha (RF07)</p>
+          <p className="seccion__subtitulo">
+            Consulte quien realizo cada cambio sobre los usuarios, en que consistio y cuando ocurrio.
+          </p>
         </div>
       </div>
 

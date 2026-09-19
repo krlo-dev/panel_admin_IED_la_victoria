@@ -1,5 +1,6 @@
 import { pool, query, queryOne } from '../../config/db.js';
 import { siguienteId } from '../../shared/ids.js';
+import { ROLES } from '../../shared/roles.js';
 
 const SELECCION = `SELECT u.id,
        u.usuario,
@@ -25,12 +26,21 @@ export async function buscarPorIdentificacion(identificacion) {
 export async function listar({ busqueda, rol, activo, curso, vigenciaId, pagina, limite }) {
   const condiciones = [];
   const parametros = [];
-  let union = '';
 
+  // Docentes y estudiantes solo pertenecen a una vigencia si estan enlazados a un
+  // curso en usuario_curso_vigencia durante esa vigencia. El coordinador es una
+  // cuenta institucional permanente, no depende de ningun enlace curso-vigencia,
+  // asi que se excluye de este filtro y siempre aparece.
   if (curso && vigenciaId) {
-    union = 'JOIN usuario_curso_vigencia ucv ON ucv.id_usuario = u.id';
-    condiciones.push('ucv.id_curso = ?', 'ucv.id_vigencia = ?');
+    condiciones.push(
+      'EXISTS (SELECT 1 FROM usuario_curso_vigencia ucv WHERE ucv.id_usuario = u.id AND ucv.id_curso = ? AND ucv.id_vigencia = ?)'
+    );
     parametros.push(curso, vigenciaId);
+  } else if (vigenciaId) {
+    condiciones.push(
+      "(r.nombre = ? OR EXISTS (SELECT 1 FROM usuario_curso_vigencia ucv WHERE ucv.id_usuario = u.id AND ucv.id_vigencia = ?))"
+    );
+    parametros.push(ROLES.COORDINADOR, vigenciaId);
   }
 
   if (busqueda) {
@@ -61,7 +71,6 @@ export async function listar({ busqueda, rol, activo, curso, vigenciaId, pagina,
             e.nombre AS estado,
             r.nombre AS rol
        FROM usuario u
-       ${union}
        JOIN rol r ON r.id = u.id_rol
        JOIN estado e ON e.id = u.id_estado
        ${where}
@@ -73,7 +82,6 @@ export async function listar({ busqueda, rol, activo, curso, vigenciaId, pagina,
   const [{ total }] = await query(
     `SELECT COUNT(*) AS total
        FROM usuario u
-       ${union}
        JOIN rol r ON r.id = u.id_rol
        ${where}`,
     parametros

@@ -87,7 +87,7 @@ export default function FormularioUsuario({ modo = 'crear', valoresIniciales, on
 
       {modo === 'crear' && (
         <div className="aviso aviso--info" style={{ marginTop: 'var(--space-2)' }}>
-          La contrasena inicial se asigna automaticamente como el numero de identificacion (RN01).
+          La contrasena inicial se asigna de forma automatica: es el numero de identificacion del usuario.
         </div>
       )}
 

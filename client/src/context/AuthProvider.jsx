@@ -8,21 +8,28 @@ export default function AuthProvider({ children }) {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
 
+  const refrescarSesion = useCallback(async () => {
+    if (!obtenerToken()) {
+      return;
+    }
+
+    try {
+      const respuesta = await auth.perfil();
+      setSesion(respuesta.data);
+    } catch {
+      borrarToken();
+      setSesion(null);
+    }
+  }, []);
+
   useEffect(() => {
     if (!obtenerToken()) {
       setCargando(false);
       return;
     }
 
-    auth
-      .perfil()
-      .then((respuesta) => setSesion(respuesta.data))
-      .catch(() => {
-        borrarToken();
-        setSesion(null);
-      })
-      .finally(() => setCargando(false));
-  }, []);
+    refrescarSesion().finally(() => setCargando(false));
+  }, [refrescarSesion]);
 
   const iniciarSesion = useCallback(async (usuario, contrasena) => {
     setError(null);
@@ -54,9 +61,10 @@ export default function AuthProvider({ children }) {
       cargando,
       error,
       iniciarSesion,
-      cerrarSesion
+      cerrarSesion,
+      refrescarSesion
     }),
-    [sesion, cargando, error, iniciarSesion, cerrarSesion]
+    [sesion, cargando, error, iniciarSesion, cerrarSesion, refrescarSesion]
   );
 
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>;
