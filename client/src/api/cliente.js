@@ -1,8 +1,37 @@
 import { obtenerToken } from './sesion.js';
 
-const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api';
+export const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api';
+export const MODO_DEMO = import.meta.env.VITE_MODO_DEMO === 'true';
 
-async function solicitar(ruta, { metodo = 'GET', cuerpo, formulario, query } = {}) {
+async function solicitarDemo(ruta, { metodo = 'GET', cuerpo, formulario, query } = {}) {
+  const { manejarSolicitud } = await import('./mocks/servidor.js');
+  const token = obtenerToken();
+
+  const { status, cuerpo: datos } = await manejarSolicitud({
+    metodo,
+    ruta,
+    query: query ?? {},
+    cuerpo,
+    formulario,
+    token
+  });
+
+  if (status === 204) {
+    return null;
+  }
+
+  if (status >= 400) {
+    const error = new Error(datos?.error?.mensaje ?? 'No fue posible completar la operacion');
+    error.codigo = datos?.error?.codigo;
+    error.detalles = datos?.error?.detalles;
+    error.status = status;
+    throw error;
+  }
+
+  return datos;
+}
+
+async function solicitarReal(ruta, { metodo = 'GET', cuerpo, formulario, query } = {}) {
   const url = new URL(`${BASE}${ruta}`);
 
   if (query) {
@@ -42,6 +71,10 @@ async function solicitar(ruta, { metodo = 'GET', cuerpo, formulario, query } = {
   }
 
   return datos;
+}
+
+function solicitar(ruta, opciones) {
+  return MODO_DEMO ? solicitarDemo(ruta, opciones) : solicitarReal(ruta, opciones);
 }
 
 export const api = {

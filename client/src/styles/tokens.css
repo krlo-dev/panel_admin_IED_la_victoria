@@ -1,0 +1,64 @@
+/*
+  Paleta institucional IED La Victoria, tomada del escudo y la bandera:
+  azul cielo, rojo, dorado y azul marino sobre blanco.
+*/
+:root {
+  /* Marca */
+  --color-marino: #10206b;
+  --color-marino-suave: #1c2f8f;
+  --color-primario: #1372b8;
+  --color-primario-oscuro: #0d5a92;
+  --color-primario-suave: #e7f3fb;
+  --color-cielo: #7fd0ff;
+  --color-cielo-suave: #eaf7ff;
+  --color-dorado: #b9780a;
+  --color-dorado-suave: #fbf0dc;
+  --color-rojo: #d60000;
+  --color-rojo-suave: #fdeaea;
+
+  /* Superficie y texto */
+  --color-fondo: #f3f6fb;
+  --color-superficie: #ffffff;
+  --color-borde: #dbe3ee;
+  --color-borde-suave: #eaf0f7;
+  --color-texto: #101a2c;
+  --color-texto-suave: #5a6a82;
+  --color-texto-tenue: #8b98ac;
+
+  /* Semántico */
+  --color-error: #c1121f;
+  --color-error-suave: #fdeaea;
+  --color-exito: #157347;
+  --color-exito-suave: #e6f6ee;
+  --color-advertencia: #a15c00;
+  --color-advertencia-suave: #fdf1de;
+
+  /* Tipografía */
+  --fuente: 'Inter', 'Segoe UI', system-ui, sans-serif;
+
+  /* Espaciado */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 2.5rem;
+
+  /* Forma */
+  --radio-sm: 8px;
+  --radio: 12px;
+  --radio-lg: 18px;
+  --radio-full: 999px;
+
+  /* Elevación */
+  --sombra-sm: 0 1px 2px rgba(16, 32, 107, 0.06);
+  --sombra-md: 0 10px 25px -8px rgba(16, 32, 107, 0.16), 0 4px 10px -6px rgba(16, 32, 107, 0.08);
+  --sombra-lg: 0 20px 45px -12px rgba(16, 32, 107, 0.22);
+
+  /* Layout */
+  --ancho-sidebar: 248px;
+  --ancho-sidebar-angosto: 76px;
+  --alto-topbar: 64px;
+  --alto-bottomnav: 64px;
+}

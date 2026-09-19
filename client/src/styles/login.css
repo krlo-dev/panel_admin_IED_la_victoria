@@ -1,0 +1,206 @@
+.ingreso {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  background: var(--color-fondo);
+}
+
+.ingreso__panel-visual {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--space-6);
+  background: linear-gradient(180deg, var(--color-marino) 0%, #0a1750 100%);
+  color: #ffffff;
+}
+
+.ingreso__marca {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.ingreso__marca img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  background: #ffffff;
+  border-radius: var(--radio-sm);
+  padding: 5px;
+}
+
+.ingreso__marca-distrito {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-cielo);
+}
+
+.ingreso__marca-nombre {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.ingreso__mensaje h2 {
+  color: #ffffff;
+  font-size: 1.6rem;
+  max-width: 26ch;
+  margin-bottom: var(--space-3);
+}
+
+.ingreso__mensaje p {
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 40ch;
+}
+
+.ingreso__foto {
+  position: relative;
+  flex: 1;
+  min-height: 340px;
+  max-height: 460px;
+  border-radius: var(--radio-lg);
+  overflow: hidden;
+  box-shadow: var(--sombra-lg);
+}
+
+.ingreso__foto img {
+  width: 100%;
+  height: 100%;
+  min-height: 340px;
+  max-height: 460px;
+  object-fit: cover;
+  object-position: center 65%;
+}
+
+.ingreso__foto-etiqueta {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  background: rgba(16, 32, 107, 0.75);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.65rem;
+  border-radius: var(--radio-full);
+}
+
+.ingreso__foto-pie {
+  position: absolute;
+  left: var(--space-3);
+  bottom: var(--space-3);
+  right: var(--space-3);
+  color: #ffffff;
+}
+
+.ingreso__foto-pie strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.ingreso__foto-pie span {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.ingreso__panel-formulario {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+}
+
+.ingreso__formulario {
+  width: 100%;
+  max-width: 420px;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  box-shadow: var(--sombra-md);
+  padding: var(--space-6);
+  border-radius: var(--radio-lg);
+}
+
+.ingreso__formulario h1 {
+  font-size: 1.35rem;
+}
+
+.ingreso__subtitulo {
+  margin: 0.35rem 0 var(--space-5);
+  color: var(--color-texto-suave);
+  font-size: 0.9rem;
+}
+
+.ingreso__campo-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ingreso__enlace {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-primario);
+}
+
+.ingreso__campo-contrasena {
+  position: relative;
+}
+
+.ingreso__alternar-clave {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--color-texto-tenue);
+  cursor: pointer;
+  padding: 0.2rem;
+}
+
+.ingreso__nota {
+  margin-top: var(--space-3);
+}
+
+.ingreso__pie {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-borde-suave);
+  font-size: 0.78rem;
+  color: var(--color-texto-tenue);
+  text-align: center;
+  line-height: 1.6;
+}
+
+@media (max-width: 960px) {
+  .ingreso {
+    grid-template-columns: 1fr;
+  }
+
+  .ingreso__panel-visual {
+    padding: var(--space-5) var(--space-4);
+    gap: var(--space-5);
+  }
+
+  .ingreso__foto {
+    flex: none;
+    min-height: 200px;
+    max-height: 260px;
+  }
+
+  .ingreso__mensaje h2 {
+    font-size: 1.3rem;
+  }
+
+  .ingreso__panel-formulario {
+    padding: var(--space-4);
+  }
+
+  .ingreso__formulario {
+    box-shadow: none;
+    border: none;
+    padding: var(--space-5) 0;
+  }
+}
