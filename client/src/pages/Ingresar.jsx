@@ -76,7 +76,7 @@ export default function Ingresar() {
               autoComplete="username"
               value={usuario}
               onChange={(evento) => setUsuario(evento.target.value)}
-              placeholder="Ej. coordinador"
+              placeholder="Ej. admin"
               required
             />
           </div>
@@ -113,8 +113,7 @@ export default function Ingresar() {
           {MODO_DEMO && (
             <div className="aviso aviso--advertencia ingreso__nota">
               <span>
-                <strong>Modo demo (sin backend):</strong> use <code>coordinador</code>, <code>docente1</code> o{' '}
-                <code>est001</code> con cualquier contrasena.
+                <strong>Modo demo (sin backend):</strong> use <code>admin</code> con cualquier contrasena.
               </span>
             </div>
           )}

@@ -8,7 +8,7 @@ import * as controller from './auth.controller.js';
 const limitarIntentos = rateLimit({
   windowMs: 10 * 60 * 1000,
   limit: 10,
-  skip: () => process.env.NODE_ENV === 'test',
+  skip: () => process.env.NODE_ENV !== 'production',
   standardHeaders: true,
   legacyHeaders: false,
   message: {

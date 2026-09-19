@@ -3,6 +3,17 @@ import { ROLES } from '../../shared/roles.js';
 export const estado = {
   usuarios: [
     {
+      id: 4,
+      identificacion: '10000000',
+      usuario: 'admin',
+      nombre: 'Administrador',
+      apellido: 'Sistema',
+      email: 'admin@iedlavictoria.edu.co',
+      idEstado: 1,
+      estado: 'Activo',
+      rol: ROLES.ADMIN
+    },
+    {
       id: 1,
       identificacion: '10000001',
       usuario: 'coordinador',

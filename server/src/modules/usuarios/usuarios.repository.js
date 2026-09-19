@@ -38,9 +38,9 @@ export async function listar({ busqueda, rol, activo, curso, vigenciaId, pagina,
     parametros.push(curso, vigenciaId);
   } else if (vigenciaId) {
     condiciones.push(
-      "(r.nombre = ? OR EXISTS (SELECT 1 FROM usuario_curso_vigencia ucv WHERE ucv.id_usuario = u.id AND ucv.id_vigencia = ?))"
+      "(r.nombre IN (?, ?) OR EXISTS (SELECT 1 FROM usuario_curso_vigencia ucv WHERE ucv.id_usuario = u.id AND ucv.id_vigencia = ?))"
     );
-    parametros.push(ROLES.COORDINADOR, vigenciaId);
+    parametros.push(ROLES.COORDINADOR, ROLES.ADMIN, vigenciaId);
   }
 
   if (busqueda) {

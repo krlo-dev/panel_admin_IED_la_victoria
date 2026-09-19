@@ -23,13 +23,13 @@ export default function App() {
           <Route index element={<Inicio />} />
           <Route path="sin-permisos" element={<SinPermisos />} />
 
-          <Route element={<RutaProtegida roles={[ROLES.DOCENTE]} />}>
+          <Route element={<RutaProtegida roles={[ROLES.DOCENTE, ROLES.ADMIN]} />}>
             <Route path="cursos" element={<Cursos />} />
             <Route path="asignaciones" element={<Asignaciones />} />
             <Route path="vigencias" element={<Vigencias />} />
           </Route>
 
-          <Route element={<RutaProtegida roles={[ROLES.COORDINADOR]} />}>
+          <Route element={<RutaProtegida roles={[ROLES.COORDINADOR, ROLES.ADMIN]} />}>
             <Route path="usuarios" element={<Usuarios />} />
             <Route path="carga-masiva" element={<CargaMasiva />} />
             <Route path="auditoria" element={<Auditoria />} />

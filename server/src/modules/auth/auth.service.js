@@ -4,6 +4,7 @@ import { env } from '../../config/env.js';
 import { HttpError } from '../../shared/httpError.js';
 import { emitirToken } from '../../shared/token.js';
 import { ESTADOS } from '../../shared/estados.js';
+import { ID_ROLES } from '../../shared/roles.js';
 import { vigenciaActiva } from '../../middlewares/vigenciaActiva.js';
 import { registrar } from '../auditoria/auditoria.service.js';
 
@@ -43,6 +44,10 @@ export async function iniciarSesion({ usuario, contrasena }) {
 
   if (encontrado.idEstado !== ESTADOS.ACTIVO) {
     throw HttpError.forbidden('La cuenta se encuentra bloqueada');
+  }
+
+  if (encontrado.idRol !== ID_ROLES.ADMIN) {
+    throw HttpError.forbidden('Acceso denegado: solo el usuario Administrador puede ingresar al sistema');
   }
 
   const perfil = { ...encontrado };

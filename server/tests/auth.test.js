@@ -11,11 +11,21 @@ let baseUrl;
 // Usuarios de prueba autocontenidos: no dependen del seed compartido
 // (database/script.sql) ni de que se haya corrido "npm run cifrar-seed".
 // Se crean en test.before y se eliminan en test.after.
+const ADMIN_PRUEBA = {
+  id: 999900,
+  identificacion: '999000900',
+  usuario: 'test_admin',
+  email: 'test_admin@iedlavictoria.edu.co',
+  contrasenaPlano: 'ClaveDePrueba2026*',
+  idRol: 4, // Administrador
+  idEstado: 1 // Activo
+};
+
 const COORDINADOR_PRUEBA = {
   id: 999901,
   identificacion: '999000901',
-  usuario: 'auth_test_coordinador',
-  email: 'auth_test_coordinador@iedlavictoria.edu.co',
+  usuario: 'test_coord',
+  email: 'test_coord@iedlavictoria.edu.co',
   contrasenaPlano: 'ClaveDePrueba2026*',
   idRol: 1, // Coordinador
   idEstado: 1 // Activo
@@ -24,8 +34,8 @@ const COORDINADOR_PRUEBA = {
 const ESTUDIANTE_BLOQUEADO_PRUEBA = {
   id: 999902,
   identificacion: '999000902',
-  usuario: 'auth_test_bloqueado',
-  email: 'auth_test_bloqueado@iedlavictoria.edu.co',
+  usuario: 'test_bloqueado',
+  email: 'test_bloqueado@iedlavictoria.edu.co',
   contrasenaPlano: 'ClaveDePrueba2026*',
   idRol: 3, // Estudiante
   idEstado: 2 // Bloqueado
@@ -53,6 +63,7 @@ async function iniciarSesion(usuario, contrasena) {
 
 test.before(async () => {
   process.env.NODE_ENV = 'test';
+  await sembrarUsuario(ADMIN_PRUEBA);
   await sembrarUsuario(COORDINADOR_PRUEBA);
   await sembrarUsuario(ESTUDIANTE_BLOQUEADO_PRUEBA);
 
@@ -67,7 +78,16 @@ test.before(async () => {
 });
 
 test.after(async () => {
-  await query('DELETE FROM usuario WHERE id IN (?, ?)', [COORDINADOR_PRUEBA.id, ESTUDIANTE_BLOQUEADO_PRUEBA.id]);
+  await query('DELETE FROM logs WHERE id_usuario IN (?, ?, ?)', [
+    ADMIN_PRUEBA.id,
+    COORDINADOR_PRUEBA.id,
+    ESTUDIANTE_BLOQUEADO_PRUEBA.id
+  ]);
+  await query('DELETE FROM usuario WHERE id IN (?, ?, ?)', [
+    ADMIN_PRUEBA.id,
+    COORDINADOR_PRUEBA.id,
+    ESTUDIANTE_BLOQUEADO_PRUEBA.id
+  ]);
   await new Promise((resolve) => server.close(resolve));
   await pool.end();
 });
@@ -80,28 +100,38 @@ test('GET /api/salud debe responder estado activo', async () => {
   assert.equal(body.data?.estado, 'activo');
 });
 
-test('POST /api/auth/login - Inicio de sesion exitoso con nombre de usuario', async () => {
-  const { res, body } = await iniciarSesion(COORDINADOR_PRUEBA.usuario, COORDINADOR_PRUEBA.contrasenaPlano);
+test('POST /api/auth/login - Inicio de sesion exitoso con usuario administrador', async () => {
+  const { res, body } = await iniciarSesion(ADMIN_PRUEBA.usuario, ADMIN_PRUEBA.contrasenaPlano);
 
   assert.equal(res.status, 200);
   assert.ok(body.data.token);
-  assert.equal(body.data.usuario.usuario, COORDINADOR_PRUEBA.usuario);
-  assert.equal(body.data.usuario.rol, 'Coordinador');
-  assert.deepEqual(body.data.rolesEfectivos, ['Coordinador', 'Docente']);
+  assert.equal(body.data.usuario.usuario, ADMIN_PRUEBA.usuario);
+  assert.equal(body.data.usuario.rol, 'Administrador');
+  assert.deepEqual(body.data.rolesEfectivos, ['Administrador', 'Coordinador', 'Docente', 'Estudiante']);
 });
 
 test('POST /api/auth/login - Inicio de sesion exitoso con correo', async () => {
-  const { res, body } = await iniciarSesion(COORDINADOR_PRUEBA.email, COORDINADOR_PRUEBA.contrasenaPlano);
+  const { res, body } = await iniciarSesion(ADMIN_PRUEBA.email, ADMIN_PRUEBA.contrasenaPlano);
 
   assert.equal(res.status, 200);
   assert.ok(body.data.token);
 });
 
 test('POST /api/auth/login - Inicio de sesion exitoso con documento de identidad', async () => {
-  const { res, body } = await iniciarSesion(COORDINADOR_PRUEBA.identificacion, COORDINADOR_PRUEBA.contrasenaPlano);
+  const { res, body } = await iniciarSesion(ADMIN_PRUEBA.identificacion, ADMIN_PRUEBA.contrasenaPlano);
 
   assert.equal(res.status, 200);
   assert.ok(body.data.token);
+});
+
+test('POST /api/auth/login - Rechaza roles no administradores como Coordinador (403)', async () => {
+  const { res, body } = await iniciarSesion(COORDINADOR_PRUEBA.usuario, COORDINADOR_PRUEBA.contrasenaPlano);
+
+  assert.equal(res.status, 403);
+  assert.equal(
+    body.error?.mensaje,
+    'Acceso denegado: solo el usuario Administrador puede ingresar al sistema'
+  );
 });
 
 test('POST /api/auth/login - Rechaza cuenta bloqueada (403)', async () => {
@@ -115,7 +145,7 @@ test('POST /api/auth/login - Rechaza cuenta bloqueada (403)', async () => {
 });
 
 test('POST /api/auth/login - Falla con contrasena incorrecta (401)', async () => {
-  const { res, body } = await iniciarSesion(COORDINADOR_PRUEBA.usuario, 'claveIncorrecta123*');
+  const { res, body } = await iniciarSesion(ADMIN_PRUEBA.usuario, 'claveIncorrecta123*');
 
   assert.equal(res.status, 401);
   assert.equal(body.error?.mensaje, 'El usuario o la contraseña no son correctos');
@@ -142,7 +172,7 @@ test('POST /api/auth/login - Validacion de esquema Zod en espanol (400)', async 
 });
 
 test('GET /api/auth/perfil - Consulta de perfil autenticado', async () => {
-  const { body: loginBody } = await iniciarSesion(COORDINADOR_PRUEBA.usuario, COORDINADOR_PRUEBA.contrasenaPlano);
+  const { body: loginBody } = await iniciarSesion(ADMIN_PRUEBA.usuario, ADMIN_PRUEBA.contrasenaPlano);
   const { token } = loginBody.data;
 
   const res = await fetch(`${baseUrl}/auth/perfil`, {
@@ -151,9 +181,9 @@ test('GET /api/auth/perfil - Consulta de perfil autenticado', async () => {
 
   const body = await res.json();
   assert.equal(res.status, 200);
-  assert.equal(body.data.usuario.usuario, COORDINADOR_PRUEBA.usuario);
+  assert.equal(body.data.usuario.usuario, ADMIN_PRUEBA.usuario);
   assert.ok(body.data.vigencia);
-  assert.deepEqual(body.data.rolesEfectivos, ['Coordinador', 'Docente']);
+  assert.deepEqual(body.data.rolesEfectivos, ['Administrador', 'Coordinador', 'Docente', 'Estudiante']);
 });
 
 test('GET /api/auth/perfil - Rechazo sin token o con token alterado (401)', async () => {
@@ -167,7 +197,7 @@ test('GET /api/auth/perfil - Rechazo sin token o con token alterado (401)', asyn
 });
 
 test('POST /api/auth/contrasena - Cambio de contrasena y verificacion', async () => {
-  const { body: loginBody } = await iniciarSesion(COORDINADOR_PRUEBA.usuario, COORDINADOR_PRUEBA.contrasenaPlano);
+  const { body: loginBody } = await iniciarSesion(ADMIN_PRUEBA.usuario, ADMIN_PRUEBA.contrasenaPlano);
   const { token } = loginBody.data;
   const nuevaClave = 'NuevaClavePrueba2026*';
 
@@ -181,23 +211,23 @@ test('POST /api/auth/contrasena - Cambio de contrasena y verificacion', async ()
   const resExito = await fetch(`${baseUrl}/auth/contrasena`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ actual: COORDINADOR_PRUEBA.contrasenaPlano, nueva: nuevaClave })
+    body: JSON.stringify({ actual: ADMIN_PRUEBA.contrasenaPlano, nueva: nuevaClave })
   });
   assert.equal(resExito.status, 200);
 
-  const { res: resLoginNuevo, body: loginNuevoBody } = await iniciarSesion(COORDINADOR_PRUEBA.usuario, nuevaClave);
+  const { res: resLoginNuevo, body: loginNuevoBody } = await iniciarSesion(ADMIN_PRUEBA.usuario, nuevaClave);
   assert.equal(resLoginNuevo.status, 200);
 
   const resRevertir = await fetch(`${baseUrl}/auth/contrasena`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${loginNuevoBody.data.token}` },
-    body: JSON.stringify({ actual: nuevaClave, nueva: COORDINADOR_PRUEBA.contrasenaPlano })
+    body: JSON.stringify({ actual: nuevaClave, nueva: ADMIN_PRUEBA.contrasenaPlano })
   });
   assert.equal(resRevertir.status, 200);
 });
 
 test('POST /api/auth/cerrar-sesion - Cierre de sesion y registro en logs', async () => {
-  const { body: loginBody } = await iniciarSesion(COORDINADOR_PRUEBA.usuario, COORDINADOR_PRUEBA.contrasenaPlano);
+  const { body: loginBody } = await iniciarSesion(ADMIN_PRUEBA.usuario, ADMIN_PRUEBA.contrasenaPlano);
   const { token } = loginBody.data;
 
   const logoutRes = await fetch(`${baseUrl}/auth/cerrar-sesion`, {
@@ -208,7 +238,7 @@ test('POST /api/auth/cerrar-sesion - Cierre de sesion y registro en logs', async
 
   const log = await queryOne(
     `SELECT accion, mistake FROM logs WHERE id_usuario = ? AND accion = 'CIERRE_SESION' ORDER BY id DESC LIMIT 1`,
-    [COORDINADOR_PRUEBA.id]
+    [ADMIN_PRUEBA.id]
   );
   assert.ok(log);
   assert.equal(log.accion, 'CIERRE_SESION');
@@ -217,7 +247,7 @@ test('POST /api/auth/cerrar-sesion - Cierre de sesion y registro en logs', async
 test('Verificacion de auditoria en base de datos (RF07)', async () => {
   const logsRecientes = await query(
     `SELECT accion, entidad, mistake FROM logs WHERE id_usuario = ? AND accion IN ('INICIO_SESION', 'CAMBIO_CONTRASENA', 'CIERRE_SESION') ORDER BY id DESC LIMIT 5`,
-    [COORDINADOR_PRUEBA.id]
+    [ADMIN_PRUEBA.id]
   );
   assert.ok(logsRecientes.length > 0);
 });

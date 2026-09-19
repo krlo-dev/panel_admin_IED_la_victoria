@@ -6,7 +6,10 @@ export async function listar({ vigenciaId, busqueda, usuario }) {
   const cursos = await repository.listar({ vigenciaId, busqueda });
 
   if (usuario.rol !== ROLES.DOCENTE) {
-    return cursos.map((curso) => ({ ...curso, administrable: usuario.rol === ROLES.COORDINADOR }));
+    return cursos.map((curso) => ({
+      ...curso,
+      administrable: usuario.rol === ROLES.COORDINADOR || usuario.rol === ROLES.ADMIN
+    }));
   }
 
   const asignados = new Set((await repository.cursosDelUsuario(usuario.id, vigenciaId)).map((c) => c.id));
@@ -20,7 +23,9 @@ export async function obtener({ id, vigenciaId, usuario }) {
   }
 
   const administrable =
-    usuario.rol === ROLES.COORDINADOR || (await repository.estaAsignado(id, usuario.id, vigenciaId));
+    usuario.rol === ROLES.COORDINADOR ||
+    usuario.rol === ROLES.ADMIN ||
+    (await repository.estaAsignado(id, usuario.id, vigenciaId));
 
   return { ...curso, administrable };
 }

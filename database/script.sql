@@ -82,7 +82,8 @@ create table configuracion(
 insert into rol(id, nombre) values
     (1, 'Coordinador'),
     (2, 'Docente'),
-    (3, 'Estudiante');
+    (3, 'Estudiante'),
+    (4, 'Administrador');
 
 -- ------------------------------------------------------------
 -- ESTADOS
@@ -147,6 +148,7 @@ insert into curso(id, grado) values
 insert into usuario(
     id, identificacion, usuario, contrasena, nombre, apellido, email, id_estado, id_rol
 ) values
+    (4, '10000000', 'admin', 'Temporal2026*', 'Administrador', 'Sistema', 'admin@iedlavictoria.edu.co', 1, 4),
     (1, '10000001', 'coordinador', 'Temporal2026*', 'Carlos', 'Mendoza', 'coordinador@iedlavictoria.edu.co', 1, 1),
     (11, '20000001', 'docente1', 'Temporal2026*', 'Ana', 'Martinez', 'docente1@iedlavictoria.edu.co', 1, 2),
     (12, '20000002', 'docente2', 'Temporal2026*', 'Luis', 'Rodriguez', 'docente2@iedlavictoria.edu.co', 1, 2),
