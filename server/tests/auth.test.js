@@ -207,7 +207,7 @@ test('POST /api/auth/cerrar-sesion - Cierre de sesion y registro en logs', async
   assert.equal(logoutRes.status, 200);
 
   const log = await queryOne(
-    `SELECT accion, mistake FROM logs WHERE id_usuario = ? AND accion = 'CIERRE_SESION' ORDER BY id DESC LIMIT 1`,
+    `SELECT accion, mistake FROM G3_logs WHERE id_usuario = ? AND accion = 'CIERRE_SESION' ORDER BY id DESC LIMIT 1`,
     [COORDINADOR_PRUEBA.id]
   );
   assert.ok(log);
@@ -216,7 +216,7 @@ test('POST /api/auth/cerrar-sesion - Cierre de sesion y registro en logs', async
 
 test('Verificacion de auditoria en base de datos (RF07)', async () => {
   const logsRecientes = await query(
-    `SELECT accion, entidad, mistake FROM logs WHERE id_usuario = ? AND accion IN ('INICIO_SESION', 'CAMBIO_CONTRASENA', 'CIERRE_SESION') ORDER BY id DESC LIMIT 5`,
+    `SELECT accion, entidad, mistake FROM G3_logs WHERE id_usuario = ? AND accion IN ('INICIO_SESION', 'CAMBIO_CONTRASENA', 'CIERRE_SESION') ORDER BY id DESC LIMIT 5`,
     [COORDINADOR_PRUEBA.id]
   );
   assert.ok(logsRecientes.length > 0);

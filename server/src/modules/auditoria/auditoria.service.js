@@ -3,10 +3,10 @@ import { siguienteId } from '../../shared/ids.js';
 
 export async function registrar({ responsable, accion, entidad, entidadId, detalle }, connection) {
   const ejecutor = connection ?? pool;
-  const id = await siguienteId(ejecutor, 'logs');
+  const id = await siguienteId(ejecutor, 'G3_logs');
 
   await ejecutor.execute(
-    `INSERT INTO logs (id, accion, entidad, id_entidad, mistake, id_usuario)
+    `INSERT INTO G3_logs (id, accion, entidad, id_entidad, mistake, id_usuario)
      VALUES (?, ?, ?, ?, ?, ?)`,
     [
       id,
@@ -53,7 +53,7 @@ export async function listar({ entidad, accion, desde, hasta, limite, pagina }) 
             l.mistake AS detalle,
             l.fecha,
             u.usuario AS responsable
-       FROM logs l
+       FROM G3_logs l
        JOIN usuario u ON u.id = l.id_usuario
        ${where}
       ORDER BY l.fecha DESC, l.id DESC
@@ -61,7 +61,7 @@ export async function listar({ entidad, accion, desde, hasta, limite, pagina }) 
     [...parametros, limite, offset]
   );
 
-  const [{ total }] = await query(`SELECT COUNT(*) AS total FROM logs l ${where}`, parametros);
+  const [{ total }] = await query(`SELECT COUNT(*) AS total FROM G3_logs l ${where}`, parametros);
 
   return { registros, total: Number(total) };
 }

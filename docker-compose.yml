@@ -15,8 +15,7 @@ services:
       - datos_mysql:/var/lib/mysql
       - ./database/script.sql:/docker-entrypoint-initdb.d/01_script.sql:ro
       - ./docker/mysql/02_inicializacion.sh:/docker-entrypoint-initdb.d/02_inicializacion.sh:ro
-      - ./database/logs.sql:/seed/logs.sql:ro
-      - ./database/complementos.sql:/seed/complementos.sql:ro
+      - ./database/G3_complementos.sql:/seed/G3_complementos.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
       interval: 10s

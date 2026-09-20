@@ -1,4 +1,4 @@
-const TABLAS = new Set(['usuario', 'curso', 'vigencia', 'logs', 'configuracion', 'rol', 'estado']);
+const TABLAS = new Set(['usuario', 'curso', 'vigencia', 'G3_logs', 'configuracion', 'rol', 'estado']);
 
 export async function siguienteId(ejecutor, tabla) {
   if (!TABLAS.has(tabla)) {
