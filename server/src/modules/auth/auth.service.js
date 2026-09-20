@@ -30,13 +30,15 @@ export async function iniciarSesion({ usuario, contrasena }) {
     throw HttpError.unauthorized('El usuario o la contraseña no son correctos');
   }
 
-  if (!encontrado.contrasena.startsWith('$2')) {
-    throw HttpError.unprocessable(
-      'La contraseña de este usuario no está cifrada. Ejecute npm run cifrar-seed en el servidor'
-    );
-  }
+  // El seed institucional (database/script.sql) trae las contrasenas de
+  // prueba en texto plano y no se debe modificar esa base para cifrarlas
+  // (la reutiliza el profesor como base de los demas proyectos). Por eso
+  // la comparacion acepta ambos formatos: bcrypt si ya esta cifrada, texto
+  // plano si aun no. Ninguno de los dos casos escribe nada en la base.
+  const coincide = encontrado.contrasena.startsWith('$2')
+    ? await bcrypt.compare(contrasena, encontrado.contrasena)
+    : contrasena === encontrado.contrasena;
 
-  const coincide = await bcrypt.compare(contrasena, encontrado.contrasena);
   if (!coincide) {
     throw HttpError.unauthorized('El usuario o la contraseña no son correctos');
   }
@@ -66,7 +68,11 @@ export async function perfil(usuario) {
 export async function cambiarContrasena({ usuario, actual, nueva }) {
   const fila = await queryOne('SELECT contrasena FROM usuario WHERE id = ? LIMIT 1', [usuario.id]);
 
-  if (!fila?.contrasena?.startsWith('$2') || !(await bcrypt.compare(actual, fila.contrasena))) {
+  const actualValida = fila?.contrasena?.startsWith('$2')
+    ? await bcrypt.compare(actual, fila.contrasena)
+    : actual === fila?.contrasena;
+
+  if (!fila || !actualValida) {
     throw HttpError.unauthorized('La contraseña actual no es correcta');
   }
 

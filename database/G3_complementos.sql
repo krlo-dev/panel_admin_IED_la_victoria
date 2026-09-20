@@ -1,5 +1,5 @@
 -- Complemento del equipo (Grupo 3), no forma parte del script institucional
--- (database/script.sql). Se ejecuta despues de ese script y reune los tres
+-- (database/script.sql). Se ejecuta despues de ese script y reune los dos
 -- aportes del grupo en un solo archivo:
 --
 --   1) La tabla G3_logs, para la auditoria que pide el RF07. Se prefija con
@@ -7,13 +7,14 @@
 --   2) El rol Administrador y un usuario de prueba para ese rol: el
 --      documento de analisis define 4 actores (Administrador, Coordinador,
 --      Docente, Estudiante), pero script.sql solo trae 3 roles.
---   3) El cifrado con bcrypt de las contrasenas de prueba. script.sql las
---      trae en texto plano ('Temporal2026*') porque asi viene el script del
---      curso; el UPDATE de mas abajo las deja ya cifradas al momento de
---      crear la base, para no depender de correr un comando aparte
---      (server/scripts/cifrar-contrasenas.js) despues de levantar el
---      proyecto. Ese script queda solo como respaldo, por si alguna vez se
---      inserta una contrasena en texto plano a mano.
+--
+-- Este archivo no modifica ni cifra los datos que trae script.sql: ese
+-- script es la base institucional que el profesor reutiliza con los demas
+-- proyectos, asi que aqui solo se agrega, nunca se toca lo existente. Las
+-- contrasenas de prueba quedan en texto plano tal como las trae el curso;
+-- el login (server/src/modules/auth/auth.service.js) acepta comparar
+-- contra texto plano ademas de bcrypt, para que el sistema funcione sin
+-- tener que cifrar ni modificar la base en ningun momento.
 
 create table G3_logs(
     id int,
@@ -36,11 +37,3 @@ insert into usuario(
     2, '10000002', 'admin', 'Temporal2026*', 'Administrador', 'Sistema',
     'admin@iedlavictoria.edu.co', 1, 4
 );
-
--- Cifra con bcrypt (10 rondas, igual que BCRYPT_ROUNDS por defecto en
--- server/src/config/env.js) todas las contrasenas de prueba que hasta aqui
--- siguen en texto plano: las de script.sql y la del admin de arriba. El
--- hash corresponde a 'Temporal2026*'; las credenciales de ingreso no cambian.
-update usuario
-set contrasena = '$2a$10$ZcAobwBjETvL9QZbnzG6LuBeMLAQ9mOYu.1z3tSOXzV.8HmLWL4c6'
-where contrasena = 'Temporal2026*';

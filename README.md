@@ -10,7 +10,7 @@ Universidad de la Costa, programa de Ingeniería de Sistemas. Luis Fuentes, Carl
 panel_admin_IED_la_Victoria/
 ├── database/                   scripts SQL y plantilla de carga
 │   ├── script.sql              modelo y datos del curso, fuente de verdad
-│   ├── G3_complementos.sql     tabla G3_logs, rol Administrador y cifrado del seed, aporte del grupo
+│   ├── G3_complementos.sql     tabla G3_logs y rol Administrador, aporte del grupo
 │   └── plantilla_carga_masiva.csv
 ├── docker/
 │   └── mysql/
@@ -27,7 +27,7 @@ El backend y el frontend son proyectos independientes: cada uno tiene su `packag
 ```
 server/
 ├── scripts/
-│   └── cifrar-contrasenas.js   respaldo manual, cifra a bcrypt cualquier contraseña en texto plano
+│   └── cifrar-contrasenas.js   opcional, cifra a bcrypt las contraseñas del seed que sigan en texto plano
 └── src/
     ├── index.js                arranque, cierre ordenado y verificación de la base
     ├── app.js                  middlewares globales y montaje de rutas
@@ -134,7 +134,7 @@ npm run dev
 
 La API queda en http://localhost:4000/api y se puede comprobar con `curl http://localhost:4000/api/salud`.
 
-Las contraseñas del seed ya quedan cifradas con bcrypt al crear la base: el `UPDATE` al final de `database/G3_complementos.sql` se encarga de eso, así que no hay que correr ningún comando aparte para poder iniciar sesión. `npm run cifrar-seed` (`server/scripts/cifrar-contrasenas.js`) queda solo como respaldo manual, por si alguna vez se inserta una contraseña en texto plano directo en la base; no cambia las credenciales de ingreso y no rompe nada si se corre cuando ya no hay nada por cifrar.
+El seed llega con las contraseñas en texto plano, tal como las trae `script.sql`, y el proyecto no las cifra en ningún momento por su cuenta: ni al crear la base ni al arrancar el servidor. El login (`server/src/modules/auth/auth.service.js`) acepta comparar tanto contra un hash bcrypt como contra texto plano, así que no hace falta ningún paso adicional para poder iniciar sesión y la base nunca se modifica sin que el usuario lo pida explícitamente (crear un usuario o cambiar una contraseña, que sí siempre quedan cifrados). `npm run cifrar-seed` (`server/scripts/cifrar-contrasenas.js`) sigue disponible por si en algún momento se quiere migrar el seed a bcrypt a mano; es opcional y no cambia las credenciales de ingreso.
 
 ### Variables de entorno
 
@@ -228,11 +228,9 @@ Las respuestas correctas llegan como `{ "data": ... }`, con `meta` cuando hay pa
 - Ninguna llave primaria es `auto_increment`, así que cada inserción calcula su id con `MAX(id) + 1` dentro de la transacción.
 - La carga masiva crea estudiantes y su matrícula en un solo movimiento. Si una fila falla no se crea ninguno, que es la RN07.
 
-`database/G3_complementos.sql` reúne los aportes del grupo: la tabla `G3_logs` (prefijada para distinguirla del modelo institucional), ampliada con `accion`, `entidad`, `id_entidad` y `fecha`, que es lo que necesita el RF07 (la columna `mistake` se conserva y guarda el detalle de la operación); el rol Administrador con un usuario de prueba, ya que el documento de análisis define 4 actores pero `script.sql` solo trae 3 roles; y, al final, un `UPDATE` que cifra con bcrypt las contraseñas de prueba que `script.sql` trae en texto plano, para que la base quede lista para iniciar sesión sin correr ningún comando aparte.
+`database/G3_complementos.sql` reúne los aportes del grupo: la tabla `G3_logs` (prefijada para distinguirla del modelo institucional), ampliada con `accion`, `entidad`, `id_entidad` y `fecha`, que es lo que necesita el RF07 (la columna `mistake` se conserva y guarda el detalle de la operación); y el rol Administrador con un usuario de prueba, ya que el documento de análisis define 4 actores pero `script.sql` solo trae 3 roles. No modifica ni cifra los datos de `script.sql`: ese script es la base institucional que se reutiliza en los demás proyectos del diplomado, así que este archivo solo agrega, nunca toca lo existente ni escribe nada en la base por su cuenta.
 
 ## Solución de problemas
-
-**El login responde que la contraseña no está cifrada.** Esto ya no debería pasar con una base creada desde cero, porque `database/G3_complementos.sql` cifra el seed automáticamente. Si aun así aparece (por ejemplo, tras insertar un usuario a mano con una contraseña en texto plano), corra `npm run cifrar-seed` en `server/`.
 
 **El servidor no arranca y dice que no fue posible iniciar.** El arranque verifica la conexión a MySQL antes de escuchar. Revise que el contenedor esté arriba con `docker compose ps` y que `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD` y `DB_NAME` en `server/.env` correspondan.
 
