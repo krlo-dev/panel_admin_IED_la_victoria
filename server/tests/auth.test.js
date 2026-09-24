@@ -14,7 +14,7 @@ let baseUrl;
 const COORDINADOR_PRUEBA = {
   id: 999901,
   identificacion: '999000901',
-  usuario: 'auth_test_coordinador',
+  usuario: 'auth_test_coord',
   email: 'auth_test_coordinador@iedlavictoria.edu.co',
   contrasenaPlano: 'ClaveDePrueba2026*',
   idRol: 1, // Coordinador
@@ -67,6 +67,7 @@ test.before(async () => {
 });
 
 test.after(async () => {
+  await query('DELETE FROM G3_logs WHERE id_usuario IN (?, ?)', [COORDINADOR_PRUEBA.id, ESTUDIANTE_BLOQUEADO_PRUEBA.id]);
   await query('DELETE FROM usuario WHERE id IN (?, ?)', [COORDINADOR_PRUEBA.id, ESTUDIANTE_BLOQUEADO_PRUEBA.id]);
   await new Promise((resolve) => server.close(resolve));
   await pool.end();

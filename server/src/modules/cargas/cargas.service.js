@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { query, withTransaction } from '../../config/db.js';
+import { withTransaction } from '../../config/db.js';
 import { env } from '../../config/env.js';
 import { HttpError } from '../../shared/httpError.js';
 import { ESTADOS } from '../../shared/estados.js';
@@ -7,6 +7,7 @@ import { ROLES } from '../../shared/roles.js';
 import { siguienteId } from '../../shared/ids.js';
 import { registrar } from '../auditoria/auditoria.service.js';
 import { validarFormato } from './cargas.validador.js';
+import * as repository from './cargas.repository.js';
 
 async function validarContraBase(filas) {
   if (!filas.length) {
@@ -16,30 +17,13 @@ async function validarContraBase(filas) {
   const errores = [];
 
   const cursos = [...new Set(filas.map((fila) => fila.idCurso))];
-  const existentes = await query(
-    `SELECT DISTINCT c.id
-       FROM curso c
-      WHERE c.id IN (${cursos.map(() => '?').join(', ')})`,
-    cursos
-  );
-  const disponibles = new Set(existentes.map((curso) => curso.id));
+  const disponibles = await repository.cursosExistentes(cursos);
 
-  const ocupados = await query(
-    `SELECT identificacion, usuario, email
-       FROM usuario
-      WHERE identificacion IN (${filas.map(() => '?').join(', ')})
-         OR usuario IN (${filas.map(() => '?').join(', ')})
-         OR email IN (${filas.map(() => '?').join(', ')})`,
-    [
-      ...filas.map((fila) => fila.identificacion),
-      ...filas.map((fila) => fila.usuario),
-      ...filas.map((fila) => fila.email)
-    ]
-  );
-
-  const identificaciones = new Set(ocupados.map((fila) => fila.identificacion));
-  const usuarios = new Set(ocupados.map((fila) => fila.usuario));
-  const correos = new Set(ocupados.map((fila) => fila.email));
+  const ocupados = await repository.buscarOcupados({
+    identificaciones: filas.map((fila) => fila.identificacion),
+    usuarios: filas.map((fila) => fila.usuario),
+    correos: filas.map((fila) => fila.email)
+  });
 
   filas.forEach((fila) => {
     const mensajes = [];
@@ -47,13 +31,13 @@ async function validarContraBase(filas) {
     if (!disponibles.has(fila.idCurso)) {
       mensajes.push(`El curso ${fila.idCurso} no existe`);
     }
-    if (identificaciones.has(fila.identificacion)) {
+    if (ocupados.identificaciones.has(fila.identificacion)) {
       mensajes.push(`La identificación "${fila.identificacion}" ya está registrada`);
     }
-    if (usuarios.has(fila.usuario)) {
+    if (ocupados.usuarios.has(fila.usuario)) {
       mensajes.push(`El usuario "${fila.usuario}" ya está registrado`);
     }
-    if (correos.has(fila.email)) {
+    if (ocupados.correos.has(fila.email)) {
       mensajes.push(`El correo "${fila.email}" ya está registrado`);
     }
 
@@ -90,25 +74,21 @@ export async function procesar({ archivo, contenido, vigencia, responsable }) {
     for (const fila of formato.filas) {
       const contrasena = await bcrypt.hash(fila.identificacion, env.bcryptRounds);
 
-      await connection.execute(
-        `INSERT INTO usuario (id, identificacion, usuario, contrasena, nombre, apellido, email, id_estado, id_rol)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, (SELECT id FROM rol WHERE nombre = ?))`,
-        [
+      await repository.matricularEstudiante(
+        {
           id,
-          fila.identificacion,
-          fila.usuario,
+          identificacion: fila.identificacion,
+          usuario: fila.usuario,
           contrasena,
-          fila.nombre,
-          fila.apellido,
-          fila.email,
-          ESTADOS.ACTIVO,
-          ROLES.ESTUDIANTE
-        ]
-      );
-
-      await connection.execute(
-        'INSERT INTO usuario_curso_vigencia (id_curso, id_vigencia, id_usuario) VALUES (?, ?, ?)',
-        [fila.idCurso, vigencia.id, id]
+          nombre: fila.nombre,
+          apellido: fila.apellido,
+          email: fila.email,
+          idEstado: ESTADOS.ACTIVO,
+          rol: ROLES.ESTUDIANTE,
+          idCurso: fila.idCurso,
+          idVigencia: vigencia.id
+        },
+        connection
       );
 
       ids.push(id);

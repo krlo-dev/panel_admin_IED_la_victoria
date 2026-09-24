@@ -2,7 +2,13 @@ import { z } from 'zod';
 
 export const consultaCursos = z.object({
   busqueda: z.string().trim().max(40).optional(),
-  anio: z.coerce.number().int().min(2000).max(2100).optional()
+  anio: z.coerce.number().int().min(2000).max(2100).optional(),
+  // Solo lo usa la vista de listado (Cursos.jsx): oculta los cursos sin
+  // estudiantes matriculados en la vigencia consultada. El resto de
+  // consumidores de GET /cursos (crear usuario, carga masiva) necesitan el
+  // catalogo completo para poder matricular al primer estudiante, asi que
+  // no lo mandan y siguen viendo todos los cursos.
+  soloConEstudiantes: z.enum(['true', 'false']).optional()
 });
 
 export const idCurso = z.object({

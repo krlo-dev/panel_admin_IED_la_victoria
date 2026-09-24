@@ -1,55 +1,22 @@
 import bcrypt from 'bcryptjs';
-import { pool, queryOne } from '../../config/db.js';
 import { env } from '../../config/env.js';
 import { HttpError } from '../../shared/httpError.js';
 import { emitirToken } from '../../shared/token.js';
 import { ESTADOS } from '../../shared/estados.js';
 import { vigenciaActiva } from '../../middlewares/vigenciaActiva.js';
 import { registrar } from '../auditoria/auditoria.service.js';
-
-const SELECCION = `SELECT u.id,
-       u.usuario,
-       u.identificacion,
-       u.nombre,
-       u.apellido,
-       u.email,
-       u.contrasena,
-       u.id_estado AS idEstado,
-       u.id_rol AS idRol,
-       r.nombre AS rol
-  FROM usuario u
-  JOIN rol r ON r.id = u.id_rol`;
+import * as repository from './auth.repository.js';
 
 export async function iniciarSesion({ usuario, contrasena }) {
-  const encontrado = await queryOne(
-    `${SELECCION} WHERE u.usuario = ? OR u.email = ? OR u.identificacion = ? LIMIT 1`,
-    [usuario, usuario, usuario]
-  );
-
-  if (!encontrado) {
-    throw HttpError.unauthorized('El usuario o la contraseña no son correctos');
-  }
-
-  // El seed institucional (database/script.sql) trae las contrasenas de
-  // prueba en texto plano y no se debe modificar esa base para cifrarlas
-  // (la reutiliza el profesor como base de los demas proyectos). Por eso
-  // la comparacion acepta ambos formatos: bcrypt si ya esta cifrada, texto
-  // plano si aun no. Ninguno de los dos casos escribe nada en la base.
+  const encontrado = await repository.buscarParaLogin(usuario);
+  if (!encontrado) throw HttpError.unauthorized('El usuario o la contraseña no son correctos');
   const coincide = encontrado.contrasena.startsWith('$2')
     ? await bcrypt.compare(contrasena, encontrado.contrasena)
     : contrasena === encontrado.contrasena;
-
-  if (!coincide) {
-    throw HttpError.unauthorized('El usuario o la contraseña no son correctos');
-  }
-
-  if (encontrado.idEstado !== ESTADOS.ACTIVO) {
-    throw HttpError.forbidden('La cuenta se encuentra bloqueada');
-  }
-
+  if (!coincide) throw HttpError.unauthorized('El usuario o la contraseña no son correctos');
+  if (encontrado.idEstado !== ESTADOS.ACTIVO) throw HttpError.forbidden('La cuenta se encuentra bloqueada');
   const perfil = { ...encontrado };
   delete perfil.contrasena;
-
   await registrar({
     responsable: perfil,
     accion: 'INICIO_SESION',
@@ -57,7 +24,6 @@ export async function iniciarSesion({ usuario, contrasena }) {
     entidadId: perfil.id,
     detalle: `Ingreso del usuario administrador ${perfil.usuario}`
   });
-
   return { token: emitirToken(perfil), usuario: perfil };
 }
 
@@ -66,19 +32,13 @@ export async function perfil(usuario) {
 }
 
 export async function cambiarContrasena({ usuario, actual, nueva }) {
-  const fila = await queryOne('SELECT contrasena FROM usuario WHERE id = ? LIMIT 1', [usuario.id]);
-
+  const fila = await repository.buscarContrasena(usuario.id);
   const actualValida = fila?.contrasena?.startsWith('$2')
     ? await bcrypt.compare(actual, fila.contrasena)
     : actual === fila?.contrasena;
-
-  if (!fila || !actualValida) {
-    throw HttpError.unauthorized('La contraseña actual no es correcta');
-  }
-
+  if (!fila || !actualValida) throw HttpError.unauthorized('La contraseña actual no es correcta');
   const hash = await bcrypt.hash(nueva, env.bcryptRounds);
-  await pool.execute('UPDATE usuario SET contrasena = ? WHERE id = ?', [hash, usuario.id]);
-
+  await repository.actualizarContrasena(usuario.id, hash);
   await registrar({
     responsable: usuario,
     accion: 'CAMBIO_CONTRASENA',

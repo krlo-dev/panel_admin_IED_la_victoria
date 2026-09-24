@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { activarVigencia, crearVigencia, listarVigencias } from '../api/vigencias.js';
+import { activarVigencia, crearVigencia, eliminarVigencia, listarVigencias } from '../api/vigencias.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { ROLES } from '../shared/roles.js';
 import Aviso from '../components/Aviso.jsx';
@@ -17,6 +17,7 @@ export default function Vigencias() {
   const [mensaje, setMensaje] = useState(null);
   const [nueva, setNueva] = useState(VIGENCIA_VACIA);
   const [creando, setCreando] = useState(false);
+  const [eliminandoId, setEliminandoId] = useState(null);
 
   const consultar = useCallback(async () => {
     setCargando(true);
@@ -43,6 +44,22 @@ export default function Vigencias() {
       setMensaje('Vigencia activa actualizada. El resto de las pantallas ya reflejan el nuevo año por defecto.');
     } catch (fallo) {
       setError(fallo.message);
+    }
+  };
+
+  const eliminar = async (id) => {
+    setError(null);
+    setMensaje(null);
+    setEliminandoId(id);
+
+    try {
+      await eliminarVigencia(id);
+      setMensaje('Vigencia eliminada correctamente.');
+      await consultar();
+    } catch (fallo) {
+      setError(fallo.message);
+    } finally {
+      setEliminandoId(null);
     }
   };
 
@@ -167,9 +184,19 @@ export default function Vigencias() {
                     </div>
                     <p className="celda-identidad__detalle">{`${vigencia.fechaInicio} a ${vigencia.fechaFin}`}</p>
                     <PermisoRol roles={[ROLES.ADMINISTRADOR]}>
-                      <button type="button" className="boton boton--claro boton--sm" onClick={() => activar(vigencia.id)}>
-                        Activar esta vigencia
-                      </button>
+                      <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+                        <button type="button" className="boton boton--claro boton--sm" onClick={() => activar(vigencia.id)}>
+                          Activar esta vigencia
+                        </button>
+                        <button
+                          type="button"
+                          className="boton boton--fantasma boton--sm"
+                          disabled={eliminandoId === vigencia.id}
+                          onClick={() => eliminar(vigencia.id)}
+                        >
+                          {eliminandoId === vigencia.id ? 'Eliminando...' : 'Eliminar vigencia'}
+                        </button>
+                      </div>
                     </PermisoRol>
                   </div>
                 ))}

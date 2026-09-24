@@ -1,39 +1,20 @@
-import { pool, query, queryOne, withTransaction } from '../../config/db.js';
+import { withTransaction } from '../../config/db.js';
 import { HttpError } from '../../shared/httpError.js';
 import { vigenciaActiva } from '../../middlewares/vigenciaActiva.js';
 import { registrar } from '../auditoria/auditoria.service.js';
-
-const CLAVE_ACTIVA = 'vigencia_activa';
+import * as repository from './vigencias.repository.js';
 
 export async function listar() {
   const activa = await vigenciaActiva();
-  const registros = await query(
-    'SELECT id, fecha_inicio AS fechaInicio, fecha_fin AS fechaFin FROM vigencia ORDER BY id DESC'
-  );
-
-  return registros.map((vigencia) => ({
-    ...vigencia,
-    anio: vigencia.id,
-    activa: vigencia.id === activa?.id
-  }));
+  const registros = await repository.listar();
+  return registros.map((vigencia) => ({ ...vigencia, anio: vigencia.id, activa: vigencia.id === activa?.id }));
 }
 
 export async function crear({ datos, responsable }) {
-  const existente = await queryOne('SELECT id FROM vigencia WHERE id = ? LIMIT 1', [datos.anio]);
-  if (existente) {
-    throw HttpError.conflict('La vigencia ya existe');
-  }
-
-  if (datos.fechaFin < datos.fechaInicio) {
-    throw HttpError.badRequest('La fecha final no puede ser anterior a la inicial');
-  }
-
-  await pool.execute('INSERT INTO vigencia (id, fecha_inicio, fecha_fin) VALUES (?, ?, ?)', [
-    datos.anio,
-    datos.fechaInicio,
-    datos.fechaFin
-  ]);
-
+  const existente = await repository.buscarPorId(datos.anio);
+  if (existente) throw HttpError.conflict('La vigencia ya existe');
+  if (datos.fechaFin < datos.fechaInicio) throw HttpError.badRequest('La fecha final no puede ser anterior a la inicial');
+  await repository.crear({ anio: datos.anio, fechaInicio: datos.fechaInicio, fechaFin: datos.fechaFin });
   await registrar({
     responsable,
     accion: 'CREACION',
@@ -41,26 +22,17 @@ export async function crear({ datos, responsable }) {
     entidadId: datos.anio,
     detalle: `Vigencia ${datos.anio} creada`
   });
-
   return { id: datos.anio, anio: datos.anio, activa: false };
 }
 
 export async function activar({ id, responsable }) {
-  const vigencia = await queryOne('SELECT id FROM vigencia WHERE id = ? LIMIT 1', [id]);
-  if (!vigencia) {
-    throw HttpError.notFound('La vigencia no existe');
-  }
-
+  const vigencia = await repository.buscarPorId(id);
+  if (!vigencia) throw HttpError.notFound('La vigencia no existe');
   await withTransaction(async (connection) => {
-    const [resultado] = await connection.execute('UPDATE configuracion SET valor = ? WHERE clave = ?', [
-      String(id),
-      CLAVE_ACTIVA
-    ]);
-
-    if (!resultado.affectedRows) {
-      throw HttpError.unprocessable(`No existe el parametro ${CLAVE_ACTIVA} en la tabla configuracion`);
+    const afectados = await repository.activar(id, connection);
+    if (!afectados) {
+      throw HttpError.unprocessable(`No existe el parametro ${repository.CLAVE_ACTIVA} en la tabla configuracion`);
     }
-
     await registrar(
       {
         responsable,
@@ -72,6 +44,32 @@ export async function activar({ id, responsable }) {
       connection
     );
   });
-
   return { id, anio: id, activa: true };
+}
+
+export async function eliminar({ id, responsable }) {
+  const vigencia = await repository.buscarPorId(id);
+  if (!vigencia) throw HttpError.notFound('La vigencia no existe');
+
+  const activa = await vigenciaActiva();
+  if (activa?.id === id) {
+    throw HttpError.conflict('No se puede eliminar la vigencia activa; active otra vigencia primero');
+  }
+
+  const tieneMatriculas = await repository.tieneMatriculas(id);
+  if (tieneMatriculas) {
+    throw HttpError.conflict(
+      `La vigencia ${id} tiene estudiantes o docentes matriculados en algun curso y no se puede eliminar`
+    );
+  }
+
+  await repository.eliminar(id);
+
+  await registrar({
+    responsable,
+    accion: 'ELIMINACION_VIGENCIA',
+    entidad: 'vigencia',
+    entidadId: id,
+    detalle: `Vigencia ${id} eliminada, sin matriculas`
+  });
 }

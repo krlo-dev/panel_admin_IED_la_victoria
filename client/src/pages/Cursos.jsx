@@ -35,7 +35,7 @@ export default function Cursos() {
     let vigente = true;
     setCargando(true);
 
-    listarCursos({ anio: anioMostrado })
+    listarCursos({ anio: anioMostrado, soloConEstudiantes: true })
       .then((respuesta) => vigente && setRegistros(respuesta.data))
       .catch((fallo) => vigente && setError(fallo.message))
       .finally(() => vigente && setCargando(false));
@@ -47,7 +47,6 @@ export default function Cursos() {
 
   useEffect(() => consultar(), [consultar]);
 
-  const idCalculado = nuevo.grado ? Number(nuevo.grado) * 100 + 11 + SECCIONES.indexOf(nuevo.seccion) : null;
   const etiquetaCalculada = nuevo.grado ? `${nuevo.grado}${nuevo.seccion}` : '';
 
   const crear = async (evento) => {
@@ -156,9 +155,6 @@ export default function Cursos() {
                   <span className="celda-identidad__detalle">{curso.id}</span>
                   <h2 style={{ marginTop: 2 }}>{curso.grado}</h2>
                 </div>
-                <span className={`insignia ${curso.administrable ? 'insignia--activo' : 'insignia--inactivo'}`}>
-                  {curso.administrable ? 'Administra' : 'Solo consulta'}
-                </span>
               </div>
               <p className="celda-identidad__detalle">
                 {curso.estudiantes} estudiantes · {curso.docentes} docentes
@@ -215,12 +211,6 @@ export default function Cursos() {
                 </select>
               </div>
             </div>
-
-            {nuevo.grado && (
-              <div className="aviso aviso--info" style={{ marginTop: 'var(--space-2)' }}>
-                {`Se creara como curso ${etiquetaCalculada}, con id ${idCalculado} (mismo patron del script del profesor: grado x 100 + 11 para la seccion A, +12 para B, y asi sucesivamente).`}
-              </div>
-            )}
 
             <Aviso tipo="error">{errorModal}</Aviso>
 

@@ -27,3 +27,13 @@ vigenciasRouter.patch(
   validar({ params: schemas.idVigencia }),
   controller.activar
 );
+
+// Eliminar tambien es exclusivo de Administrador, y solo procede si la
+// vigencia no es la activa y nunca tuvo matriculas (lo valida el servicio
+// contra usuario_curso_vigencia).
+vigenciasRouter.delete(
+  '/:id',
+  autorizar(ROLES.ADMINISTRADOR),
+  validar({ params: schemas.idVigencia }),
+  controller.eliminar
+);

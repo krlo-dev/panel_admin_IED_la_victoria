@@ -7,8 +7,8 @@ import * as repository from './cursos.repository.js';
 // id = grado*100 + 11 para la seccion A, +12 para B, y asi sucesivamente.
 const SECCIONES = ['A', 'B', 'C', 'D', 'E', 'F'];
 
-export async function listar({ vigenciaId, busqueda, usuario }) {
-  const cursos = await repository.listar({ vigenciaId, busqueda });
+export async function listar({ vigenciaId, busqueda, usuario, soloConEstudiantes }) {
+  const cursos = await repository.listar({ vigenciaId, busqueda, soloConEstudiantes });
 
   if (usuario.rol !== ROLES.DOCENTE) {
     return cursos.map((curso) => ({ ...curso, administrable: usuario.rol === ROLES.COORDINADOR }));

@@ -3,8 +3,13 @@ import { creado, ok, sinContenido } from '../../shared/respuesta.js';
 import * as service from './cursos.service.js';
 
 export const listar = asyncHandler(async (req, res) => {
-  const { busqueda } = req.validated.query;
-  const cursos = await service.listar({ vigenciaId: req.vigencia.id, busqueda, usuario: req.usuario });
+  const { busqueda, soloConEstudiantes } = req.validated.query;
+  const cursos = await service.listar({
+    vigenciaId: req.vigencia.id,
+    busqueda,
+    usuario: req.usuario,
+    soloConEstudiantes: soloConEstudiantes === 'true'
+  });
   ok(res, cursos, { anio: req.vigencia.anio, total: cursos.length });
 });
 

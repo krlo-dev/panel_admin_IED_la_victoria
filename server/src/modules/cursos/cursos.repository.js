@@ -2,7 +2,7 @@ import { pool, query, queryOne } from '../../config/db.js';
 import { ROLES } from '../../shared/roles.js';
 import { ESTADOS } from '../../shared/estados.js';
 
-export async function listar({ vigenciaId, busqueda }) {
+export async function listar({ vigenciaId, busqueda, soloConEstudiantes }) {
   // El curso es permanente (no pertenece a una vigencia especifica, ver RN05),
   // asi que la lista muestra todos los cursos que existan, incluidos los que
   // todavia no tienen a nadie matriculado en la vigencia consultada. Solo los
@@ -25,6 +25,15 @@ export async function listar({ vigenciaId, busqueda }) {
   }
 
   const where = condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : '';
+  // Solo para la vista de listado (ver soloConEstudiantes en cursos.schemas.js):
+  // oculta cursos "fantasma" que tuvieron matriculas en otra vigencia pero
+  // ninguna en la consultada. Un curso que JAMAS ha tenido a nadie, en
+  // ninguna vigencia, se sigue mostrando (para poder gestionarlo/eliminarlo).
+  // No afecta a quien pide el catalogo completo (crear usuario, carga masiva).
+  const having = soloConEstudiantes
+    ? `HAVING estudiantes > 0
+        OR NOT EXISTS (SELECT 1 FROM usuario_curso_vigencia ucv WHERE ucv.id_curso = c.id)`
+    : '';
 
   return query(
     `SELECT c.id,
@@ -41,6 +50,7 @@ export async function listar({ vigenciaId, busqueda }) {
               WHERE y.id_curso = c.id AND ry.nombre = ? AND y.id_vigencia = ? AND uy.id_estado = ?) AS docentes
        FROM curso c
        ${where}
+      ${having}
       ORDER BY c.id`,
     parametros
   );
