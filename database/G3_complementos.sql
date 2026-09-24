@@ -8,13 +8,7 @@
 --      documento de analisis define 4 actores (Administrador, Coordinador,
 --      Docente, Estudiante), pero script.sql solo trae 3 roles.
 --
--- Este archivo no modifica ni cifra los datos que trae script.sql: ese
--- script es la base institucional que el profesor reutiliza con los demas
--- proyectos, asi que aqui solo se agrega, nunca se toca lo existente. Las
--- contrasenas de prueba quedan en texto plano tal como las trae el curso;
--- el login (server/src/modules/auth/auth.service.js) acepta comparar
--- contra texto plano ademas de bcrypt, para que el sistema funcione sin
--- tener que cifrar ni modificar la base en ningun momento.
+ 
 
 create table G3_logs(
     id int,
